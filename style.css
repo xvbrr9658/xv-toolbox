@@ -915,28 +915,37 @@ details.xs-status-container[open] > summary.xs-status-summary::after {
     width: 100%;
 }
 .xv-tb-model-badge {
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     padding: 3px 9px;
     border-radius: 6px;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 600;
-    color: #e2e8f0;
+    color: #ffffff;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     white-space: nowrap !important;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 72%;
+    max-width: 68%;
+    flex-shrink: 1;
+}
+.xv-tb-model-name-text {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
 }
 .xv-tb-model-provider {
-    font-size: 10.5px;
-    color: rgba(255, 255, 255, 0.5);
-    white-space: nowrap;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap !important;
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: right;
+    flex-shrink: 0;
 }
 .xv-tb-thinking-tag {
     font-size: 10.5px;

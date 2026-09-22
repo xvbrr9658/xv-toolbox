@@ -1,7 +1,7 @@
 {
   "name": "xv-toolbox",
   "display_name": "XV 随身百宝箱",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "author": "xv & AI Assistant",
   "description": "专为深度沉浸式长程剧情打造的随身工具箱：全景真实Token监控与模型注意力红线、古法2.0文风对照记忆归档、剧情纠偏与成人NSFW护航、富文本组件一键发包、Git规范热更新。",
   "js": "index.js",

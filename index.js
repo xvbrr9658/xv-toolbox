@@ -442,139 +442,94 @@
         }
     };
 
-    // 动态嗅探当前酒馆真正激活的模型 (五级深度穿透引擎)
+    // 动态嗅探当前酒馆真正激活的模型 (无本地僵尸缓存，100% 实时响应)
     function detectActiveModel() {
         let ctx = null;
         if (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') {
             try { ctx = window.SillyTavern.getContext(); } catch (e) {}
         }
 
-        // 1. 穿透最近真实 AI 消息底层元数据 (最强地面真值 Ground Truth)
+        // 1. 最高优先级：穿透最近真实 AI 消息底层打标 (Ground Truth 地面真值)
         if (ctx && Array.isArray(ctx.chat) && ctx.chat.length > 0) {
             for (let i = ctx.chat.length - 1; i >= 0; i--) {
                 const msg = ctx.chat[i];
                 if (msg && !msg.is_user && !msg.is_system) {
                     const extraModel = msg.extra?.model || msg.extra?.api_model || msg.model;
                     if (extraModel && typeof extraModel === 'string' && extraModel.trim()) {
-                        const m = extraModel.trim();
-                        try { localStorage.setItem('xv_tb_active_model', m); } catch (e) {}
-                        return m;
+                        return extraModel.trim();
                     }
                 }
             }
         }
 
-        // 2. 检测当前激活的 API 类型
-        const mainApiEl = document.getElementById('main_api');
-        const mainApi = (mainApiEl ? mainApiEl.value : (window.main_api || (ctx && ctx.main_api) || '')).toLowerCase();
+        // 2. 检测当前 Chat Completion 源与配置 (Claude, Google, OpenAI, OpenRouter 等)
+        const oaiSettings = window.oai_settings;
+        const source = (oaiSettings?.chat_completion_source || '').toLowerCase();
 
-        // 3. 针对不同 API 深入扫描专有选择器与酒馆配置变量
-        if (mainApi.includes('claude')) {
-            const claudeSel = document.querySelector('#claude_model option:checked, #claude_model, #model_claude_select option:checked, #model_claude_select');
-            if (claudeSel && (claudeSel.value || claudeSel.textContent)) {
-                const val = (claudeSel.value || claudeSel.textContent).trim();
-                if (val) {
-                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
-                    return val;
-                }
+        if (source === 'claude') {
+            const el = document.querySelector('#claude_model option:checked, #claude_model, #model_claude_select option:checked');
+            if (el && (el.value || el.textContent)) {
+                const v = (el.value || el.textContent).trim();
+                if (v) return v;
             }
-            if (window.claude_settings?.model) {
-                const val = window.claude_settings.model.trim();
-                if (val) {
-                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
-                    return val;
-                }
+            if (oaiSettings?.claude_model) return oaiSettings.claude_model.trim();
+            if (window.claude_settings?.model) return window.claude_settings.model.trim();
+        } else if (source === 'google' || source === 'makersuite' || source === 'vertexai') {
+            const el = document.querySelector('#google_model option:checked, #google_model, #gemini_model option:checked, #gemini_model');
+            if (el && (el.value || el.textContent)) {
+                const v = (el.value || el.textContent).trim();
+                if (v) return v;
             }
-            if (window.claude_setting?.model) return window.claude_setting.model.trim();
-        }
-
-        if (mainApi.includes('openai') || mainApi.includes('custom') || mainApi.includes('proxy')) {
-            const oaiSel = document.querySelector('#model_openai_select option:checked, #model_openai_select, #model_custom_select option:checked, #model_custom_select, #custom_model_id');
-            if (oaiSel && (oaiSel.value || oaiSel.textContent)) {
-                const val = (oaiSel.value || oaiSel.textContent).trim();
-                if (val) {
-                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
-                    return val;
-                }
-            }
-            if (window.openai_settings?.model) {
-                const val = window.openai_settings.model.trim();
-                if (val) {
-                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
-                    return val;
-                }
-            }
-            if (window.openai_setting?.model) return window.openai_setting.model.trim();
-        }
-
-        if (mainApi.includes('gemini') || mainApi.includes('google') || mainApi.includes('makersuite')) {
-            const gemSel = document.querySelector('#gemini_model option:checked, #gemini_model, #model_gemini_select option:checked, #model_gemini_select');
-            if (gemSel && (gemSel.value || gemSel.textContent)) {
-                const val = (gemSel.value || gemSel.textContent).trim();
-                if (val) {
-                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
-                    return val;
-                }
-            }
+            if (oaiSettings?.google_model) return oaiSettings.google_model.trim();
+            if (oaiSettings?.vertexai_model) return oaiSettings.vertexai_model.trim();
             if (window.gemini_settings?.model) return window.gemini_settings.model.trim();
-            if (window.gemini_setting?.model) return window.gemini_setting.model.trim();
+        } else if (source === 'openrouter') {
+            const el = document.querySelector('#openrouter_model option:checked, #openrouter_model');
+            if (el && (el.value || el.textContent)) {
+                const v = (el.value || el.textContent).trim();
+                if (v) return v;
+            }
+            if (oaiSettings?.openrouter_model) return oaiSettings.openrouter_model.trim();
+        } else if (source === 'custom') {
+            const customInput = document.querySelector('#custom_model_id');
+            if (customInput && customInput.value && customInput.value.trim()) {
+                return customInput.value.trim();
+            }
         }
 
-        // 4. 通用全景扫描 (所有可能挂载的下拉框与输入框)
+        // 3. 检查通用/OpenAI 下拉框与设置
+        const oaiSel = document.querySelector('#model_openai_select option:checked, #model_openai_select');
+        if (oaiSel && (oaiSel.value || oaiSel.textContent)) {
+            const val = (oaiSel.value || oaiSel.textContent).trim();
+            if (val) return val;
+        }
+        if (oaiSettings?.openai_model) return oaiSettings.openai_model.trim();
+
+        // 4. 扫描其他可能挂载的下拉框
         const allSelectors = [
             '#claude_model option:checked',
-            '#claude_model',
-            '#model_claude_select option:checked',
-            '#model_claude_select',
-            '#model_openai_select option:checked',
-            '#model_openai_select',
+            '#google_model option:checked',
             '#gemini_model option:checked',
-            '#gemini_model',
+            '#openrouter_model option:checked',
             '#model_select option:checked',
             '#model_select',
-            '#model_custom_select option:checked',
-            '#custom_model_id',
             'select[name="model"] option:checked',
             '#api_model option:checked'
         ];
         for (const sel of allSelectors) {
             const el = document.querySelector(sel);
-            if (el && el.value && el.value.trim() !== '') {
-                const val = el.value.trim();
-                try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
-                return val;
-            }
-            if (el && el.textContent && el.textContent.trim() !== '') {
-                const val = el.textContent.trim();
-                try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
-                return val;
-            }
+            if (el && el.value && el.value.trim()) return el.value.trim();
+            if (el && el.textContent && el.textContent.trim()) return el.textContent.trim();
         }
 
-        // 5. 扫描酒馆全局变量
-        if (window.claude_settings && window.claude_settings.model) return window.claude_settings.model;
-        if (window.openai_settings && window.openai_settings.model) return window.openai_settings.model;
-        if (window.gemini_settings && window.gemini_settings.model) return window.gemini_settings.model;
-        if (window.claude_setting && window.claude_setting.model) return window.claude_setting.model;
-        if (window.openai_setting && window.openai_setting.model) return window.openai_setting.model;
-        if (window.gemini_setting && window.gemini_setting.model) return window.gemini_setting.model;
-        if (window.textgen_settings && window.textgen_settings.model) return window.textgen_settings.model;
-        if (window.selected_model) return window.selected_model;
-
-        // 6. 从 context 提取
+        // 5. 从 context 或全局变量尝试提取
         if (ctx) {
-            if (ctx.chat_metadata && ctx.chat_metadata.model) return ctx.chat_metadata.model;
+            if (ctx.chatMetadata?.model) return ctx.chatMetadata.model;
             if (ctx.selected_model) return ctx.selected_model;
             if (ctx.model) return ctx.model;
         }
 
-        // 7. 读取本地持久化缓存
-        try {
-            const cached = localStorage.getItem('xv_tb_active_model');
-            if (cached && cached.trim()) return cached.trim();
-        } catch (e) {}
-
-        return 'gemini-3.1-pro-low';
+        return 'Gemini 3.1 Pro (Low)';
     }
 
     function resolveModelSpec(rawModelId) {
@@ -624,34 +579,48 @@
     }
 
     // ==========================================
-    // 2. 高精度 Token 统计引擎 (Token Counting)
+    // 2. 高精度 Token 统计引擎 (Native Token Counting)
     // ==========================================
     function countTokens(text) {
         if (!text) return 0;
         if (typeof text !== 'string') text = String(text);
+        if (!text.trim()) return 0;
 
-        // 原生分词器接口尝试
+        // 1. 原生 SillyTavern getContext() 分词接口（与酒馆世界书编辑器 100% 同源）
         if (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') {
-            const ctx = window.SillyTavern.getContext();
-            if (typeof ctx.tokenCount === 'function') {
-                try { return ctx.tokenCount(text); } catch (e) {}
-            }
-            if (typeof ctx.encode === 'function') {
-                try { return ctx.encode(text).length; } catch (e) {}
-            }
+            try {
+                const ctx = window.SillyTavern.getContext();
+                if (typeof ctx.getTokenCount === 'function') {
+                    const tk = ctx.getTokenCount(text);
+                    if (typeof tk === 'number' && !isNaN(tk) && tk > 0) return tk;
+                }
+                if (typeof ctx.tokenCount === 'function') {
+                    const tk = ctx.tokenCount(text);
+                    if (typeof tk === 'number' && !isNaN(tk) && tk > 0) return tk;
+                }
+                if (typeof ctx.encode === 'function') {
+                    const len = ctx.encode(text).length;
+                    if (typeof len === 'number' && !isNaN(len) && len > 0) return len;
+                }
+            } catch (e) {}
         }
 
-        // 高精度校准分词估算器（对标 Gemini / cl100k 中英文混合分词）
-        const cjkMatches = text.match(/[\u4e00-\u9fa5\u3040-\u30ff\uac00-\ud7af]/g) || [];
-        const nonCjkText = text.replace(/[\u4e00-\u9fa5\u3040-\u30ff\uac00-\ud7af]/g, ' ');
-        const words = nonCjkText.trim().split(/\s+/).filter(Boolean);
-
-        const cjkTokens = Math.ceil(cjkMatches.length * 0.72);
-        let nonCjkTokens = 0;
-        for (const w of words) {
-            nonCjkTokens += Math.max(1, Math.ceil(w.length / 3.8));
+        // 2. 检查全局 tokenizers 模块
+        if (window.tokenizers && typeof window.tokenizers.getTokenCount === 'function') {
+            try {
+                const tk = window.tokenizers.getTokenCount(text);
+                if (typeof tk === 'number' && !isNaN(tk) && tk > 0) return tk;
+            } catch (e) {}
         }
-        return Math.max(1, cjkTokens + nonCjkTokens);
+
+        // 3. 遵从 SillyTavern 官方标准 guesstimate (TextEncoder UTF-8 字节数 / 3.35)
+        // 中文 UTF-8 每个字符 3 字节 -> 3 / 3.35 ≈ 0.9 ~ 1.25 tk/字，高度对齐现代 cl100k 与 Claude
+        try {
+            const byteLength = new TextEncoder().encode(text).length;
+            return Math.ceil(byteLength / 3.35);
+        } catch (e) {
+            return Math.ceil(text.length * 1.15);
+        }
     }
 
     function inspectPayload() {
@@ -660,7 +629,7 @@
             try { ctx = window.SillyTavern.getContext(); } catch (e) {}
         }
 
-        // 1. 动态嗅探当前模型
+        // 1. 动态嗅探当前模型 (实时穿透，无僵尸缓存)
         const detectedModel = detectActiveModel();
         const modelSpec = resolveModelSpec(detectedModel);
 
@@ -686,7 +655,7 @@
             charTotal = charBreakdown.description + charBreakdown.personality + charBreakdown.scenario + charBreakdown.mes_example;
         }
 
-        // 3. 激活世界书条目全面扫描 (角色内置世界书 + 全局/会话世界书)
+        // 3. 激活世界书条目全面扫描 (仅扫描当前角色内嵌与当前会话实际绑定的世界书)
         let lorebook = { constant: 0, triggered: 0, total: 0, count: 0, constantCount: 0, triggeredCount: 0, entriesList: [] };
         let rawEntries = [];
 
@@ -697,20 +666,16 @@
             rawEntries = rawEntries.concat(activeChar.character_book.entries);
         }
 
-        // 3.2 扫描全局/挂载世界书
-        if (ctx && ctx.world_info) {
-            const wi = ctx.world_info.entries || ctx.world_info;
-            if (Array.isArray(wi)) {
-                rawEntries = rawEntries.concat(wi);
-            } else if (typeof wi === 'object') {
-                rawEntries = rawEntries.concat(Object.values(wi));
+        // 3.2 扫描当前聊天显式绑定的世界书 (Chat Worldbook)
+        const chatWorldBookName = ctx?.chatMetadata?.world_info || window.chat_metadata?.world_info;
+        if (chatWorldBookName && window.world_info_data && window.world_info_data[chatWorldBookName]) {
+            const cwb = window.world_info_data[chatWorldBookName];
+            if (Array.isArray(cwb.entries)) {
+                rawEntries = rawEntries.concat(cwb.entries);
             }
         }
-        if (window.world_info && Array.isArray(window.world_info.entries)) {
-            rawEntries = rawEntries.concat(window.world_info.entries);
-        }
 
-        // 3.3 计算常驻蓝灯与触发绿灯 (严格过滤 disable === true 与 enabled === false)
+        // 3.3 计算常驻蓝灯与按需绿灯 (严格过滤 disable === true 与 enabled === false)
         const seenUids = new Set();
         rawEntries.forEach(entry => {
             if (!entry) return;
@@ -719,13 +684,13 @@
             const content = entry.content ? String(entry.content).trim() : '';
             if (!content) return;
 
-            const uid = entry.uid || entry.id || entry.comment || content.substring(0, 30);
-            if (uid && seenUids.has(uid)) return;
-            if (uid) seenUids.add(uid);
+            const uid = String(entry.uid ?? entry.id ?? entry.comment ?? content.substring(0, 30));
+            if (seenUids.has(uid)) return;
+            seenUids.add(uid);
 
             const tks = countTokens(content);
             const isConst = entry.constant === true || entry.always_active === true;
-            const entryName = entry.comment || entry.displayName || entry.name || (content.length > 16 ? content.substring(0, 16) + '...' : content);
+            const entryName = entry.comment || entry.displayName || entry.name || (content.length > 18 ? content.substring(0, 18) + '...' : content);
 
             lorebook.entriesList.push({
                 name: entryName,
@@ -742,14 +707,20 @@
             }
             lorebook.count++;
         });
-        // 绿灯按需激活在单轮对话中通常被检索截断，按上限 600 tk 纳入预估
-        lorebook.total = lorebook.constant + (lorebook.triggered > 0 ? Math.min(lorebook.triggered, 600) : 0);
+        // 蓝灯常驻条目为每轮必然注入的基础消耗；绿灯按需条目待命
+        lorebook.total = lorebook.constant;
 
-        // 4. 预设与动态规则块实时穿透 (穿透 window.power_user 与 DOM)
+        // 4. 预设与动态规则块实时穿透 (彻底打通 Chat Completion 原生预设)
         let preset = { system_prompt: 0, custom_blocks: 0, post_history: 0, total: 0, presetName: '当前预设', isEstimate: false };
 
-        const presetSel = document.getElementById('settings_preset') || document.getElementById('chat_completion_preset');
-        if (presetSel && presetSel.selectedOptions && presetSel.selectedOptions[0]) {
+        const oaiSettings = window.oai_settings;
+        const presetSel = document.getElementById('settings_preset_openai') 
+            || document.getElementById('settings_preset') 
+            || document.getElementById('chat_completion_preset');
+
+        if (oaiSettings && oaiSettings.preset_settings_openai) {
+            preset.presetName = oaiSettings.preset_settings_openai;
+        } else if (presetSel && presetSel.selectedOptions && presetSel.selectedOptions[0]) {
             preset.presetName = presetSel.selectedOptions[0].textContent.trim();
         } else if (window.selected_preset) {
             preset.presetName = window.selected_preset;
@@ -760,70 +731,76 @@
         let postHistoryText = '';
         let customBlockText = '';
 
-        // 4.1 穿透 window.power_user (酒馆高级格式核心存储)
-        const pu = window.power_user || (ctx && ctx.power_user);
-        if (pu) {
-            if (typeof pu.main_prompt === 'string') mainPromptText = pu.main_prompt;
-            if (typeof pu.jailbreak_prompt === 'string') jbText = pu.jailbreak_prompt;
-            if (typeof pu.post_history_instructions === 'string') postHistoryText = pu.post_history_instructions;
-            if (Array.isArray(pu.custom_prompts)) {
-                pu.custom_prompts.forEach(cp => {
-                    if (cp && cp.enabled !== false && cp.disable !== true && cp.content) {
-                        customBlockText += cp.content + '\n';
-                    }
-                });
-            } else if (pu.custom_prompts && typeof pu.custom_prompts === 'object') {
-                Object.values(pu.custom_prompts).forEach(cp => {
-                    if (cp && cp.enabled !== false && cp.disable !== true && cp.content) {
-                        customBlockText += cp.content + '\n';
-                    }
-                });
+        // 4.1 穿透 window.openai_settings 与 window.openai_setting_names (Chat Completion 原生内存)
+        if (window.openai_settings && window.openai_setting_names && oaiSettings?.preset_settings_openai) {
+            const idx = window.openai_setting_names[oaiSettings.preset_settings_openai];
+            if (idx !== undefined && window.openai_settings[idx]) {
+                const pData = window.openai_settings[idx];
+                if (typeof pData.main_prompt === 'string') mainPromptText = pData.main_prompt;
+                if (typeof pData.jailbreak_system_prompt === 'string') jbText = pData.jailbreak_system_prompt;
+                if (typeof pData.jailbreak_prompt === 'string' && !jbText) jbText = pData.jailbreak_prompt;
+                if (typeof pData.post_history_instructions === 'string') postHistoryText = pData.post_history_instructions;
+
+                if (Array.isArray(pData.prompts)) {
+                    pData.prompts.forEach(p => {
+                        if (p && p.enabled !== false && p.disable !== true && p.content) {
+                            if (p.name !== 'main' && p.name !== 'jailbreak') {
+                                customBlockText += p.content + '\n';
+                            }
+                        }
+                    });
+                }
             }
         }
 
-        // 4.2 穿透 DOM 文本框 (若用户打开了高级格式面板或 DOM 已经渲染)
+        // 4.2 穿透 DOM 文本框 (若用户在高级设置面板中实时编辑了文本)
         const mainPromptEl = document.getElementById('main_prompt') || document.getElementById('system_prompt');
-        const jailbreakEl = document.getElementById('jailbreak_prompt');
+        const jailbreakEl = document.getElementById('jailbreak_system_prompt') || document.getElementById('jailbreak_prompt') || document.getElementById('nsfw_prompt');
         const postHistoryEl = document.getElementById('post_history_instructions');
 
         if (mainPromptEl && mainPromptEl.value) mainPromptText = mainPromptEl.value;
         if (jailbreakEl && jailbreakEl.value) jbText = jailbreakEl.value;
         if (postHistoryEl && postHistoryEl.value) postHistoryText = postHistoryEl.value;
 
-        // 4.3 扫描动态勾选框自定义规则块
-        const activeCheckboxes = document.querySelectorAll('#custom_prompts input[type="checkbox"]:checked, .custom_prompt_entry input[type="checkbox"]:checked');
+        // 4.3 穿透 oai_settings 配置字段
+        if (!mainPromptText && oaiSettings?.main_prompt) mainPromptText = oaiSettings.main_prompt;
+        if (!jbText && oaiSettings?.jailbreak_system_prompt) jbText = oaiSettings.jailbreak_system_prompt;
+        if (!postHistoryText && oaiSettings?.post_history_instructions) postHistoryText = oaiSettings.post_history_instructions;
+
+        // 4.4 扫描动态勾选框自定义规则块与 Prompt Manager 条目
+        const activeCheckboxes = document.querySelectorAll('#custom_prompts input[type="checkbox"]:checked, .custom_prompt_entry input[type="checkbox"]:checked, .prompt_manager_item input[type="checkbox"]:checked');
         activeCheckboxes.forEach(cb => {
-            const row = cb.closest('.custom_prompt_entry') || cb.parentElement;
+            const row = cb.closest('.custom_prompt_entry, .prompt_manager_item') || cb.parentElement;
             if (row) {
                 const ta = row.querySelector('textarea');
                 if (ta && ta.value) customBlockText += ta.value + '\n';
             }
         });
 
-        // 4.4 检查 chat_completion_settings
-        const ccSettings = window.chat_completion_settings || window.openai_settings || window.claude_settings;
-        if (ccSettings) {
-            if (!mainPromptText && ccSettings.main_prompt) mainPromptText = ccSettings.main_prompt;
-            if (!jbText && ccSettings.jailbreak_prompt) jbText = ccSettings.jailbreak_prompt;
+        // 4.5 穿透 window.power_user (针对老式 TextGen / NovelAI 用户)
+        const pu = window.power_user || (ctx && ctx.power_user);
+        if (pu) {
+            if (!mainPromptText && typeof pu.main_prompt === 'string') mainPromptText = pu.main_prompt;
+            if (!jbText && typeof pu.jailbreak_prompt === 'string') jbText = pu.jailbreak_prompt;
+            if (!postHistoryText && typeof pu.post_history_instructions === 'string') postHistoryText = pu.post_history_instructions;
+            if (Array.isArray(pu.custom_prompts)) {
+                pu.custom_prompts.forEach(cp => {
+                    if (cp && cp.enabled !== false && cp.disable !== true && cp.content) {
+                        customBlockText += cp.content + '\n';
+                    }
+                });
+            }
         }
 
         const spTokens = countTokens(mainPromptText) + countTokens(jbText);
         const cbTokens = countTokens(customBlockText);
         const phTokens = countTokens(postHistoryText);
 
-        if (spTokens > 0 || cbTokens > 0 || phTokens > 0) {
-            preset.system_prompt = spTokens;
-            preset.custom_blocks = cbTokens;
-            preset.post_history = phTokens;
-            preset.isEstimate = false;
-        } else {
-            // 兜底智能估算 (仅当 DOM 和 window.power_user 均未载入时)
-            preset.system_prompt = 1800;
-            preset.post_history = 1100;
-            preset.custom_blocks = 0;
-            preset.isEstimate = true;
-        }
-        preset.total = preset.system_prompt + preset.custom_blocks + preset.post_history;
+        preset.system_prompt = spTokens;
+        preset.custom_blocks = cbTokens;
+        preset.post_history = phTokens;
+        preset.total = spTokens + cbTokens + phTokens;
+        preset.isEstimate = false;
 
         // 5. 活动未隐藏聊天历史
         let chatTokens = 0;
@@ -935,7 +912,7 @@
     // ==========================================
     // 3. 配置与持久化状态 (Config & Storage)
     // ==========================================
-    const STORAGE_KEY = 'xv_toolbox_config_v210';
+    const STORAGE_KEY = 'xv_toolbox_config_v230';
     const POS_STORAGE_KEY = 'xv_toolbox_position';
 
     const defaultConfig = {
@@ -1250,9 +1227,9 @@
         hero.innerHTML = `
             <div class="xv-tb-hero-top">
                 <div class="xv-tb-hero-row">
-                    <div class="xv-tb-model-badge" title="当前模型: ${p.modelSpec.displayName} (${p.modelSpec.provider})">
-                        <span style="font-size:12px;">⚡</span>
-                        <span style="color:#ffffff; font-weight:700;">${p.modelSpec.displayName}</span>
+                    <div class="xv-tb-model-badge" title="${p.modelSpec.displayName} (${p.modelSpec.provider})">
+                        <span style="font-size:12px; flex-shrink:0;">⚡</span>
+                        <span class="xv-tb-model-name-text">${p.modelSpec.displayName}</span>
                     </div>
                     <span class="xv-tb-model-provider">${p.modelSpec.provider}</span>
                 </div>
@@ -1875,12 +1852,26 @@
         document.head.appendChild(style);
     }
 
-    // 注册酒馆生命周期事件监听 (设置变更、角色加载、聊天更新实时联动)
+    // 辅助函数：若当前正开着 Tokens 监控页，实时重刷 DOM 保持同步
+    function syncOpenTokensTab() {
+        const modal = document.getElementById('xv-tb-modal');
+        if (modal && modal.style.display !== 'none') {
+            const activeNav = modal.querySelector('.xv-tb-nav-btn.xv-tb-active');
+            if (activeNav && activeNav.dataset.tab === 'tokens') {
+                const content = document.getElementById('xv-tb-content');
+                if (content) renderTokensTab(content);
+            }
+        }
+    }
+
+    // 注册酒馆生命周期事件监听 (设置变更、角色加载、聊天更新实时联动，无需 F5 刷新)
     function setupSTEventListeners() {
         if (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') {
             const ctx = window.SillyTavern.getContext();
-            if (ctx && ctx.eventSource && ctx.event_types) {
-                const types = ctx.event_types;
+            const eventSource = ctx?.eventSource || window.eventSource;
+            const types = ctx?.eventTypes || ctx?.event_types || window.event_types;
+
+            if (eventSource && types) {
                 const eventsToListen = [
                     types.SETTINGS_UPDATED,
                     types.PRESET_CHANGED,
@@ -1894,12 +1885,25 @@
 
                 eventsToListen.forEach(evt => {
                     try {
-                        ctx.eventSource.on(evt, () => {
-                            setTimeout(updateTokenHUD, 100);
+                        eventSource.on(evt, () => {
+                            setTimeout(() => {
+                                updateTokenHUD();
+                                syncOpenTokensTab();
+                            }, 80);
                         });
                     } catch (e) {}
                 });
             }
+        }
+
+        // 下拉框与设置变动监听 (切模型、切预设一瞬间立刻重算)
+        if (window.$) {
+            $(document).on('change', '#settings_preset_openai, #model_openai_select, #claude_model, #google_model, #openrouter_model, #main_api, #chat_completion_source', () => {
+                setTimeout(() => {
+                    updateTokenHUD();
+                    syncOpenTokensTab();
+                }, 60);
+            });
         }
     }
 
@@ -1932,5 +1936,5 @@
     }
 
     bootstrap();
-    console.log('[XV-Toolbox] XV 随身百宝箱 v2.2.0 已成功启动！');
+    console.log('[XV-Toolbox] XV 随身百宝箱 v2.3.0 (原生数据直连版) 已成功启动！');
 })();
