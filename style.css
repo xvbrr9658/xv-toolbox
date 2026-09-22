@@ -895,35 +895,65 @@ details.xs-status-container[open] > summary.xs-status-summary::after {
 }
 .xv-tb-hero-top {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
+    flex-direction: column;
     gap: 8px;
     padding-bottom: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
+.xv-tb-hero-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+.xv-tb-hero-subrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
 .xv-tb-model-badge {
     background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    padding: 3px 8px;
+    padding: 3px 9px;
     border-radius: 6px;
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 600;
     color: #e2e8f0;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     white-space: nowrap !important;
-    flex-shrink: 0 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 72%;
+}
+.xv-tb-model-provider {
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: right;
 }
 .xv-tb-thinking-tag {
     font-size: 10.5px;
     font-weight: 600;
-    padding: 2px 7px;
+    padding: 2.5px 8px;
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+.xv-tb-context-limit {
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.45);
+    white-space: nowrap;
+    text-align: right;
 }
 .xv-tb-thinking-tag.high {
     background: rgba(251, 146, 60, 0.18);
@@ -1090,7 +1120,113 @@ details.xs-status-container[open] > summary.xs-status-summary::after {
     color: rgba(255, 255, 255, 0.35);
 }
 
-/* 5. 古法2.0 阶段记忆归档抽屉 (Archive Modal - 手机底部原生抽屉架构) */
+/* 5. 古法2.0 阶段记忆归档面板 (内置于百宝箱内部，杜绝 iOS 飞顶) */
+.xv-tb-archive-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(12, 15, 22, 0.98);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    padding: 16px 18px 24px 18px;
+    box-sizing: border-box;
+    flex-direction: column;
+    z-index: 60;
+    border-radius: 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    color: #f1f5f9;
+}
+.xv-tb-archive-overlay.xv-tb-show {
+    display: flex !important;
+    animation: xv-tb-fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes xv-tb-fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 世界书条目展开透明明细清单 */
+.xv-tb-lore-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #38bdf8;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 2px 4px;
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    opacity: 0.85;
+}
+.xv-tb-lore-toggle-btn:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+.xv-tb-lore-breakdown {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    max-height: 120px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.xv-tb-lore-breakdown.xv-tb-show {
+    display: flex;
+}
+.xv-tb-lore-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10.5px;
+    line-height: 1.4;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.xv-tb-lore-item:last-child {
+    border-bottom: none;
+}
+.xv-tb-lore-name {
+    color: #cbd5e1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+}
+.xv-tb-lore-tag {
+    font-size: 9.5px;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+.xv-tb-lore-tag.constant {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+.xv-tb-lore-tag.triggered {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+/* 酒馆原生扩展列表侧边栏挂载项 */
+#xv-tb-extension-drawer {
+    margin: 4px 0;
+}
+#xv-tb-extension-drawer .inline-drawer-header {
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+}
+
+/* 兼容原有抽屉 */
 .xv-tb-archive-drawer {
     display: none;
     position: fixed;

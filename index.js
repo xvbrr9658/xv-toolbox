@@ -341,6 +341,28 @@
             rpCrit: 45000,
             desc: "Google 2.5 闪电模型 · 百万上下文，轻快敏捷。"
         },
+        "gemini-2.0-flash": {
+            displayName: "Gemini 2.0 Flash",
+            provider: "Google",
+            maxContext: 1000000,
+            reasoningEffort: "none",
+            thinkingWarn: false,
+            rpComfort: 18000,
+            rpWarn: 35000,
+            rpCrit: 45000,
+            desc: "Google 2.0 极速多模态模型 · 100万超大窗口。"
+        },
+        "claude-3-7-sonnet": {
+            displayName: "Claude 3.7 Sonnet",
+            provider: "Anthropic",
+            maxContext: 200000,
+            reasoningEffort: "standard",
+            thinkingWarn: false,
+            rpComfort: 18000,
+            rpWarn: 28000,
+            rpCrit: 42000,
+            desc: "Anthropic 顶级双模推理旗舰 · 200k 上下文，微表情与深度心理博弈顶级。"
+        },
         "claude-3-5-sonnet-20241022": {
             displayName: "Claude 3.5 Sonnet (New)",
             provider: "Anthropic",
@@ -363,6 +385,17 @@
             rpCrit: 38000,
             desc: "Anthropic 顶级文本文风模型 · 200k 上下文。"
         },
+        "claude-3-5-haiku": {
+            displayName: "Claude 3.5 Haiku",
+            provider: "Anthropic",
+            maxContext: 200000,
+            reasoningEffort: "none",
+            thinkingWarn: false,
+            rpComfort: 18000,
+            rpWarn: 32000,
+            rpCrit: 45000,
+            desc: "Anthropic 极速轻量模型 · 200k 上下文，响应极快。"
+        },
         "claude-3-opus": {
             displayName: "Claude 3 Opus",
             provider: "Anthropic",
@@ -384,74 +417,205 @@
             rpWarn: 25000,
             rpCrit: 35000,
             desc: "OpenAI 多模态旗舰模型 · 128k 上下文。"
+        },
+        "deepseek-reasoner": {
+            displayName: "DeepSeek R1",
+            provider: "DeepSeek",
+            maxContext: 64000,
+            reasoningEffort: "high",
+            thinkingWarn: true,
+            rpComfort: 14000,
+            rpWarn: 25000,
+            rpCrit: 35000,
+            desc: "DeepSeek 深度强化推理模型 · 具备强链式思考能力。"
+        },
+        "deepseek-chat": {
+            displayName: "DeepSeek V3",
+            provider: "DeepSeek",
+            maxContext: 64000,
+            reasoningEffort: "none",
+            thinkingWarn: false,
+            rpComfort: 16000,
+            rpWarn: 30000,
+            rpCrit: 42000,
+            desc: "DeepSeek 综合大模型 · 64k 上下文，文笔通顺流畅。"
         }
     };
 
-    // 动态嗅探当前酒馆真正激活的模型
+    // 动态嗅探当前酒馆真正激活的模型 (五级深度穿透引擎)
     function detectActiveModel() {
         let ctx = null;
         if (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') {
             try { ctx = window.SillyTavern.getContext(); } catch (e) {}
         }
 
-        // 1. 优先扫描当前 DOM 下拉框激活项 (用户在界面切换模型最直接生效的入口)
-        const selectors = [
-            '#model_openai_select option:checked',
-            '#model_select option:checked',
-            '#model_custom_select option:checked',
-            'select[name="model"] option:checked',
-            '#api_model option:checked'
-        ];
-        for (const sel of selectors) {
-            const el = document.querySelector(sel);
-            if (el && el.value && el.value.trim() !== '') {
-                return el.value.trim();
-            }
-            if (el && el.textContent && el.textContent.trim() !== '') {
-                return el.textContent.trim();
+        // 1. 穿透最近真实 AI 消息底层元数据 (最强地面真值 Ground Truth)
+        if (ctx && Array.isArray(ctx.chat) && ctx.chat.length > 0) {
+            for (let i = ctx.chat.length - 1; i >= 0; i--) {
+                const msg = ctx.chat[i];
+                if (msg && !msg.is_user && !msg.is_system) {
+                    const extraModel = msg.extra?.model || msg.extra?.api_model || msg.model;
+                    if (extraModel && typeof extraModel === 'string' && extraModel.trim()) {
+                        const m = extraModel.trim();
+                        try { localStorage.setItem('xv_tb_active_model', m); } catch (e) {}
+                        return m;
+                    }
+                }
             }
         }
 
-        // 2. 扫描常用 API 设定的全局变量
-        if (window.openai_setting && window.openai_setting.model) return window.openai_setting.model;
+        // 2. 检测当前激活的 API 类型
+        const mainApiEl = document.getElementById('main_api');
+        const mainApi = (mainApiEl ? mainApiEl.value : (window.main_api || (ctx && ctx.main_api) || '')).toLowerCase();
+
+        // 3. 针对不同 API 深入扫描专有选择器与酒馆配置变量
+        if (mainApi.includes('claude')) {
+            const claudeSel = document.querySelector('#claude_model option:checked, #claude_model, #model_claude_select option:checked, #model_claude_select');
+            if (claudeSel && (claudeSel.value || claudeSel.textContent)) {
+                const val = (claudeSel.value || claudeSel.textContent).trim();
+                if (val) {
+                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
+                    return val;
+                }
+            }
+            if (window.claude_settings?.model) {
+                const val = window.claude_settings.model.trim();
+                if (val) {
+                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
+                    return val;
+                }
+            }
+            if (window.claude_setting?.model) return window.claude_setting.model.trim();
+        }
+
+        if (mainApi.includes('openai') || mainApi.includes('custom') || mainApi.includes('proxy')) {
+            const oaiSel = document.querySelector('#model_openai_select option:checked, #model_openai_select, #model_custom_select option:checked, #model_custom_select, #custom_model_id');
+            if (oaiSel && (oaiSel.value || oaiSel.textContent)) {
+                const val = (oaiSel.value || oaiSel.textContent).trim();
+                if (val) {
+                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
+                    return val;
+                }
+            }
+            if (window.openai_settings?.model) {
+                const val = window.openai_settings.model.trim();
+                if (val) {
+                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
+                    return val;
+                }
+            }
+            if (window.openai_setting?.model) return window.openai_setting.model.trim();
+        }
+
+        if (mainApi.includes('gemini') || mainApi.includes('google') || mainApi.includes('makersuite')) {
+            const gemSel = document.querySelector('#gemini_model option:checked, #gemini_model, #model_gemini_select option:checked, #model_gemini_select');
+            if (gemSel && (gemSel.value || gemSel.textContent)) {
+                const val = (gemSel.value || gemSel.textContent).trim();
+                if (val) {
+                    try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
+                    return val;
+                }
+            }
+            if (window.gemini_settings?.model) return window.gemini_settings.model.trim();
+            if (window.gemini_setting?.model) return window.gemini_setting.model.trim();
+        }
+
+        // 4. 通用全景扫描 (所有可能挂载的下拉框与输入框)
+        const allSelectors = [
+            '#claude_model option:checked',
+            '#claude_model',
+            '#model_claude_select option:checked',
+            '#model_claude_select',
+            '#model_openai_select option:checked',
+            '#model_openai_select',
+            '#gemini_model option:checked',
+            '#gemini_model',
+            '#model_select option:checked',
+            '#model_select',
+            '#model_custom_select option:checked',
+            '#custom_model_id',
+            'select[name="model"] option:checked',
+            '#api_model option:checked'
+        ];
+        for (const sel of allSelectors) {
+            const el = document.querySelector(sel);
+            if (el && el.value && el.value.trim() !== '') {
+                const val = el.value.trim();
+                try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
+                return val;
+            }
+            if (el && el.textContent && el.textContent.trim() !== '') {
+                const val = el.textContent.trim();
+                try { localStorage.setItem('xv_tb_active_model', val); } catch (e) {}
+                return val;
+            }
+        }
+
+        // 5. 扫描酒馆全局变量
+        if (window.claude_settings && window.claude_settings.model) return window.claude_settings.model;
+        if (window.openai_settings && window.openai_settings.model) return window.openai_settings.model;
+        if (window.gemini_settings && window.gemini_settings.model) return window.gemini_settings.model;
         if (window.claude_setting && window.claude_setting.model) return window.claude_setting.model;
+        if (window.openai_setting && window.openai_setting.model) return window.openai_setting.model;
         if (window.gemini_setting && window.gemini_setting.model) return window.gemini_setting.model;
         if (window.textgen_settings && window.textgen_settings.model) return window.textgen_settings.model;
         if (window.selected_model) return window.selected_model;
 
-        // 3. 从 context 提取
+        // 6. 从 context 提取
         if (ctx) {
             if (ctx.chat_metadata && ctx.chat_metadata.model) return ctx.chat_metadata.model;
             if (ctx.selected_model) return ctx.selected_model;
             if (ctx.model) return ctx.model;
         }
 
-        return 'gemini-3.1-pro-high';
+        // 7. 读取本地持久化缓存
+        try {
+            const cached = localStorage.getItem('xv_tb_active_model');
+            if (cached && cached.trim()) return cached.trim();
+        } catch (e) {}
+
+        return 'gemini-3.1-pro-low';
     }
 
     function resolveModelSpec(rawModelId) {
-        if (!rawModelId) rawModelId = 'gemini-3.1-pro-high';
+        if (!rawModelId) rawModelId = 'gemini-3.1-pro-low';
         const id = String(rawModelId).toLowerCase().trim();
         for (const key in BUILTIN_MODEL_SPECS) {
             if (id === key.toLowerCase()) return BUILTIN_MODEL_SPECS[key];
         }
+
+        // Claude 家族智能匹配
+        if (id.includes('3.7') && id.includes('sonnet')) return BUILTIN_MODEL_SPECS["claude-3-7-sonnet"];
+        if (id.includes('sonnet')) return BUILTIN_MODEL_SPECS["claude-3-5-sonnet-20241022"];
+        if (id.includes('opus')) return BUILTIN_MODEL_SPECS["claude-3-opus"];
+        if (id.includes('haiku')) return BUILTIN_MODEL_SPECS["claude-3-5-haiku"];
+        if (id.includes('claude')) return BUILTIN_MODEL_SPECS["claude-3-5-sonnet"];
+
+        // Gemini 家族智能匹配
         if (id.includes('3.1') && id.includes('pro') && id.includes('low')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro-low"];
         if (id.includes('3.1') && id.includes('pro') && id.includes('high')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro-high"];
-        if (id.includes('3.1') && id.includes('pro')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro-high"];
+        if (id.includes('3.1') && id.includes('pro')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro-low"];
         if (id.includes('3.8') && id.includes('flash')) return BUILTIN_MODEL_SPECS["gemini-3.8-flash"];
         if (id.includes('2.5') && id.includes('pro')) return BUILTIN_MODEL_SPECS["gemini-2.5-pro"];
         if (id.includes('2.5') && id.includes('flash')) return BUILTIN_MODEL_SPECS["gemini-2.5-flash"];
-        if (id.includes('sonnet')) return BUILTIN_MODEL_SPECS["claude-3-5-sonnet-20241022"];
-        if (id.includes('opus')) return BUILTIN_MODEL_SPECS["claude-3-opus"];
+        if (id.includes('2.0') && id.includes('flash')) return BUILTIN_MODEL_SPECS["gemini-2.0-flash"];
+
+        // DeepSeek 家族智能匹配
+        if (id.includes('deepseek') && (id.includes('r1') || id.includes('reasoner'))) return BUILTIN_MODEL_SPECS["deepseek-reasoner"];
+        if (id.includes('deepseek')) return BUILTIN_MODEL_SPECS["deepseek-chat"];
+
+        // OpenAI 家族智能匹配
         if (id.includes('4o')) return BUILTIN_MODEL_SPECS["gpt-4o"];
 
         // 动态自适应未知/新模型
+        const isClaude = id.includes('claude');
+        const isGemini = id.includes('gemini');
         return {
             displayName: rawModelId,
-            provider: "Detected API",
-            maxContext: 128000,
+            provider: isClaude ? "Anthropic" : (isGemini ? "Google" : "Detected API"),
+            maxContext: isClaude ? 200000 : (isGemini ? 1000000 : 128000),
             reasoningEffort: id.includes('high') ? 'high' : (id.includes('low') ? 'low' : 'standard'),
-            thinkingWarn: id.includes('high'),
+            thinkingWarn: id.includes('high') || id.includes('reasoner'),
             rpComfort: 15000,
             rpWarn: 25000,
             rpCrit: 40000,
@@ -523,7 +687,7 @@
         }
 
         // 3. 激活世界书条目全面扫描 (角色内置世界书 + 全局/会话世界书)
-        let lorebook = { constant: 0, triggered: 0, total: 0, count: 0, constantCount: 0, triggeredCount: 0 };
+        let lorebook = { constant: 0, triggered: 0, total: 0, count: 0, constantCount: 0, triggeredCount: 0, entriesList: [] };
         let rawEntries = [];
 
         // 3.1 扫描角色内置世界书 (MUFY/酒馆角色卡核心存储处)
@@ -546,17 +710,30 @@
             rawEntries = rawEntries.concat(window.world_info.entries);
         }
 
-        // 3.3 计算常驻蓝灯与触发绿灯
+        // 3.3 计算常驻蓝灯与触发绿灯 (严格过滤 disable === true 与 enabled === false)
         const seenUids = new Set();
         rawEntries.forEach(entry => {
-            if (!entry || entry.enabled === false) return;
-            const uid = entry.uid || entry.id || entry.comment || entry.content;
+            if (!entry) return;
+            // SillyTavern 标准禁用属性是 disable === true
+            if (entry.disable === true || entry.enabled === false) return;
+            const content = entry.content ? String(entry.content).trim() : '';
+            if (!content) return;
+
+            const uid = entry.uid || entry.id || entry.comment || content.substring(0, 30);
             if (uid && seenUids.has(uid)) return;
             if (uid) seenUids.add(uid);
 
-            const content = entry.content || '';
             const tks = countTokens(content);
-            if (entry.constant === true || entry.always_active === true) {
+            const isConst = entry.constant === true || entry.always_active === true;
+            const entryName = entry.comment || entry.displayName || entry.name || (content.length > 16 ? content.substring(0, 16) + '...' : content);
+
+            lorebook.entriesList.push({
+                name: entryName,
+                isConstant: isConst,
+                tokens: tks
+            });
+
+            if (isConst) {
                 lorebook.constant += tks;
                 lorebook.constantCount++;
             } else {
@@ -568,34 +745,53 @@
         // 绿灯按需激活在单轮对话中通常被检索截断，按上限 600 tk 纳入预估
         lorebook.total = lorebook.constant + (lorebook.triggered > 0 ? Math.min(lorebook.triggered, 600) : 0);
 
-        // 4. 预设与动态规则块实时穿透 (直接读取 DOM 文本框与勾选框)
-        let preset = { system_prompt: 0, custom_blocks: 0, post_history: 0, total: 0, presetName: '默认预设' };
+        // 4. 预设与动态规则块实时穿透 (穿透 window.power_user 与 DOM)
+        let preset = { system_prompt: 0, custom_blocks: 0, post_history: 0, total: 0, presetName: '当前预设', isEstimate: false };
 
-        const presetSel = document.getElementById('settings_preset');
+        const presetSel = document.getElementById('settings_preset') || document.getElementById('chat_completion_preset');
         if (presetSel && presetSel.selectedOptions && presetSel.selectedOptions[0]) {
             preset.presetName = presetSel.selectedOptions[0].textContent.trim();
+        } else if (window.selected_preset) {
+            preset.presetName = window.selected_preset;
         }
 
-        const mainPromptEl = document.getElementById('main_prompt');
+        let mainPromptText = '';
+        let jbText = '';
+        let postHistoryText = '';
+        let customBlockText = '';
+
+        // 4.1 穿透 window.power_user (酒馆高级格式核心存储)
+        const pu = window.power_user || (ctx && ctx.power_user);
+        if (pu) {
+            if (typeof pu.main_prompt === 'string') mainPromptText = pu.main_prompt;
+            if (typeof pu.jailbreak_prompt === 'string') jbText = pu.jailbreak_prompt;
+            if (typeof pu.post_history_instructions === 'string') postHistoryText = pu.post_history_instructions;
+            if (Array.isArray(pu.custom_prompts)) {
+                pu.custom_prompts.forEach(cp => {
+                    if (cp && cp.enabled !== false && cp.disable !== true && cp.content) {
+                        customBlockText += cp.content + '\n';
+                    }
+                });
+            } else if (pu.custom_prompts && typeof pu.custom_prompts === 'object') {
+                Object.values(pu.custom_prompts).forEach(cp => {
+                    if (cp && cp.enabled !== false && cp.disable !== true && cp.content) {
+                        customBlockText += cp.content + '\n';
+                    }
+                });
+            }
+        }
+
+        // 4.2 穿透 DOM 文本框 (若用户打开了高级格式面板或 DOM 已经渲染)
+        const mainPromptEl = document.getElementById('main_prompt') || document.getElementById('system_prompt');
         const jailbreakEl = document.getElementById('jailbreak_prompt');
         const postHistoryEl = document.getElementById('post_history_instructions');
 
-        let mainPromptText = mainPromptEl ? mainPromptEl.value : '';
-        let jbText = jailbreakEl ? jailbreakEl.value : '';
-        let postHistoryText = postHistoryEl ? postHistoryEl.value : '';
+        if (mainPromptEl && mainPromptEl.value) mainPromptText = mainPromptEl.value;
+        if (jailbreakEl && jailbreakEl.value) jbText = jailbreakEl.value;
+        if (postHistoryEl && postHistoryEl.value) postHistoryText = postHistoryEl.value;
 
-        // 若 DOM 未载入，从 context 兜底读取
-        if (!mainPromptText && ctx && ctx.chat_metadata) {
-            mainPromptText = ctx.chat_metadata.main_prompt || '';
-            postHistoryText = ctx.chat_metadata.post_history_instructions || '';
-        }
-
-        preset.system_prompt = countTokens(mainPromptText) + countTokens(jbText);
-        preset.post_history = countTokens(postHistoryText);
-
-        // 扫描动态激活的自定义规则块 (Custom Prompt Blocks)
-        let customBlockText = '';
-        const activeCheckboxes = document.querySelectorAll('#custom_prompts input[type="checkbox"]:checked');
+        // 4.3 扫描动态勾选框自定义规则块
+        const activeCheckboxes = document.querySelectorAll('#custom_prompts input[type="checkbox"]:checked, .custom_prompt_entry input[type="checkbox"]:checked');
         activeCheckboxes.forEach(cb => {
             const row = cb.closest('.custom_prompt_entry') || cb.parentElement;
             if (row) {
@@ -603,9 +799,30 @@
                 if (ta && ta.value) customBlockText += ta.value + '\n';
             }
         });
-        preset.custom_blocks = countTokens(customBlockText);
-        if (preset.system_prompt === 0) preset.system_prompt = 1800; // 兜底标准预设
-        if (preset.post_history === 0) preset.post_history = 1100;
+
+        // 4.4 检查 chat_completion_settings
+        const ccSettings = window.chat_completion_settings || window.openai_settings || window.claude_settings;
+        if (ccSettings) {
+            if (!mainPromptText && ccSettings.main_prompt) mainPromptText = ccSettings.main_prompt;
+            if (!jbText && ccSettings.jailbreak_prompt) jbText = ccSettings.jailbreak_prompt;
+        }
+
+        const spTokens = countTokens(mainPromptText) + countTokens(jbText);
+        const cbTokens = countTokens(customBlockText);
+        const phTokens = countTokens(postHistoryText);
+
+        if (spTokens > 0 || cbTokens > 0 || phTokens > 0) {
+            preset.system_prompt = spTokens;
+            preset.custom_blocks = cbTokens;
+            preset.post_history = phTokens;
+            preset.isEstimate = false;
+        } else {
+            // 兜底智能估算 (仅当 DOM 和 window.power_user 均未载入时)
+            preset.system_prompt = 1800;
+            preset.post_history = 1100;
+            preset.custom_blocks = 0;
+            preset.isEstimate = true;
+        }
         preset.total = preset.system_prompt + preset.custom_blocks + preset.post_history;
 
         // 5. 活动未隐藏聊天历史
@@ -821,19 +1038,23 @@
     // ==========================================
     function openArchiveModal() {
         const p = inspectPayload();
-        let drawer = document.getElementById('xv-tb-archive-drawer');
-        if (!drawer) {
-            drawer = document.createElement('div');
-            drawer.id = 'xv-tb-archive-drawer';
-            drawer.className = 'xv-tb-archive-drawer';
-            document.body.appendChild(drawer);
+        let overlay = document.getElementById('xv-tb-archive-overlay');
+        if (!overlay) {
+            const modal = document.getElementById('xv-tb-modal');
+            if (modal) {
+                overlay = document.createElement('div');
+                overlay.id = 'xv-tb-archive-overlay';
+                overlay.className = 'xv-tb-archive-overlay';
+                modal.appendChild(overlay);
+            }
         }
+        if (!overlay) return;
 
         // 默认自动为您保留最后 10 楼作为文风样本缓冲带
         const retainCount = 10;
         let defaultHideTarget = Math.max(p.startFloor, p.endFloor - retainCount);
 
-        drawer.innerHTML = `
+        overlay.innerHTML = `
             <div class="xv-tb-archive-header">
                 <div class="xv-tb-archive-title">✨ 古法 2.0 阶段记忆归档与文风对照</div>
                 <button class="xv-tb-close-btn" id="xv-tb-archive-close">✕</button>
@@ -870,29 +1091,32 @@
             </div>
         `;
 
-        drawer.classList.add('xv-tb-show');
-        drawer.scrollTop = 0; // 保证头部在顶部完全可见
+        overlay.classList.add('xv-tb-show');
+        overlay.scrollTop = 0;
 
         // 楼层动态计算联动
-        const inputEl = drawer.querySelector('#xv-tb-hide-target-input');
-        const noteEl = drawer.querySelector('#xv-tb-buffer-note-box');
-        inputEl.addEventListener('input', () => {
-            const val = parseInt(inputEl.value, 10);
-            if (isNaN(val) || val < p.startFloor || val > p.endFloor) {
-                noteEl.innerHTML = `⚠️ 请输入在 ${p.startFloor} 至 ${p.endFloor} 之间的有效楼层编号。`;
-                return;
-            }
-            const retained = p.endFloor - val;
-            if (retained <= 0) {
-                noteEl.innerHTML = `⚠️ 当前设置为【全量隐藏】（未保留任何缓冲楼层），下一轮对话可能因丧失上下文文风样本而偏硬。`;
-            } else {
-                noteEl.innerHTML = `💡 已保留最后 <b>${retained}</b> 楼（第 ${val + 1} ~ ${p.endFloor} 楼）作为【文风与对白对照样本】，模型将精准复刻最新语感！`;
-            }
-        });
+        const inputEl = overlay.querySelector('#xv-tb-hide-target-input');
+        const noteEl = overlay.querySelector('#xv-tb-buffer-note-box');
+        if (inputEl && noteEl) {
+            inputEl.addEventListener('input', () => {
+                const val = parseInt(inputEl.value, 10);
+                if (isNaN(val) || val < p.startFloor || val > p.endFloor) {
+                    noteEl.innerHTML = `⚠️ 请输入在 ${p.startFloor} 至 ${p.endFloor} 之间的有效楼层编号。`;
+                    return;
+                }
+                const retained = p.endFloor - val;
+                if (retained <= 0) {
+                    noteEl.innerHTML = `⚠️ 当前设置为【全量隐藏】（未保留任何缓冲楼层），下一轮对话可能因丧失上下文文风样本而偏硬。`;
+                } else {
+                    noteEl.innerHTML = `💡 已保留最后 <b>${retained}</b> 楼（第 ${val + 1} ~ ${p.endFloor} 楼）作为【文风与对白对照样本】，模型将精准复刻最新语感！`;
+                }
+            });
+        }
 
         // AI 一键提炼按钮
-        drawer.querySelector('#xv-tb-btn-ai-extract').addEventListener('click', () => {
-            const btn = drawer.querySelector('#xv-tb-btn-ai-extract');
+        overlay.querySelector('#xv-tb-btn-ai-extract')?.addEventListener('click', () => {
+            const btn = overlay.querySelector('#xv-tb-btn-ai-extract');
+            if (!btn) return;
             btn.textContent = '⏳ 正在提炼中...';
             btn.disabled = true;
             setTimeout(() => {
@@ -901,7 +1125,8 @@
 - 【关键抉择】：用户选择静默递药而非追问旧事，化解了对峙僵局。
 - 【重要信物】：贝瑞旻将湿透的墨蓝领带夹遗落在沙发缝隙中。
 - 【心境与微表情】：贝瑞旻表面冷漠毒舌，内心占有欲与愧疚暗涌交织。`;
-                drawer.querySelector('#xv-tb-archive-textarea').value = sampleText;
+                const ta = overlay.querySelector('#xv-tb-archive-textarea');
+                if (ta) ta.value = sampleText;
                 btn.textContent = '✅ 提炼完成';
                 setTimeout(() => {
                     btn.textContent = '🤖 AI 一键提炼';
@@ -911,14 +1136,14 @@
         });
 
         // 关闭
-        drawer.querySelector('#xv-tb-archive-close').addEventListener('click', closeArchiveModal);
-        drawer.querySelector('#xv-tb-archive-cancel').addEventListener('click', closeArchiveModal);
+        overlay.querySelector('#xv-tb-archive-close')?.addEventListener('click', closeArchiveModal);
+        overlay.querySelector('#xv-tb-archive-cancel')?.addEventListener('click', closeArchiveModal);
 
         // 确认归档
-        drawer.querySelector('#xv-tb-archive-confirm').addEventListener('click', () => {
+        overlay.querySelector('#xv-tb-archive-confirm')?.addEventListener('click', () => {
             const targetFloor = parseInt(inputEl.value, 10);
-            const summary = drawer.querySelector('#xv-tb-archive-textarea').value.trim();
-            const keywords = drawer.querySelector('#xv-tb-archive-keywords').value.trim();
+            const summary = overlay.querySelector('#xv-tb-archive-textarea')?.value?.trim();
+            const keywords = overlay.querySelector('#xv-tb-archive-keywords')?.value?.trim();
 
             if (!summary) {
                 showToast('⚠️ 记忆摘要不能为空！');
@@ -946,10 +1171,10 @@
     }
 
     function closeArchiveModal() {
+        const overlay = document.getElementById('xv-tb-archive-overlay');
+        if (overlay) overlay.classList.remove('xv-tb-show');
         const drawer = document.getElementById('xv-tb-archive-drawer');
-        if (drawer) {
-            drawer.classList.remove('xv-tb-show');
-        }
+        if (drawer) drawer.classList.remove('xv-tb-show');
     }
 
     // ==========================================
@@ -1019,21 +1244,24 @@
         const p = inspectPayload();
         const grad = getAttentionGradient(p.totalInputTokens, p.modelSpec);
 
-        // 1. 总体健康大盘卡片 (Hero Card)
+        // 1. 总体健康大盘卡片 (Hero Card - 两行自适应极简磨砂设计)
         const hero = document.createElement('div');
         hero.className = 'xv-tb-hero-card';
         hero.innerHTML = `
             <div class="xv-tb-hero-top">
-                <div class="xv-tb-model-badge">
-                    <span style="white-space:nowrap;">⚡ 模型:</span>
-                    <span style="color:#ffffff; font-weight:700; white-space:nowrap;">${p.modelSpec.displayName}</span>
-                    <span style="opacity:0.6; font-size:10px; white-space:nowrap;">(${p.modelSpec.provider})</span>
+                <div class="xv-tb-hero-row">
+                    <div class="xv-tb-model-badge" title="当前模型: ${p.modelSpec.displayName} (${p.modelSpec.provider})">
+                        <span style="font-size:12px;">⚡</span>
+                        <span style="color:#ffffff; font-weight:700;">${p.modelSpec.displayName}</span>
+                    </div>
+                    <span class="xv-tb-model-provider">${p.modelSpec.provider}</span>
                 </div>
-                <div>
+                <div class="xv-tb-hero-subrow">
                     ${p.modelSpec.thinkingWarn ? 
                         `<span class="xv-tb-thinking-tag high">⚠️ 思考档位: High (高额推演)</span>` : 
                         `<span class="xv-tb-thinking-tag low">⚡ 思考档位: Low (额度克制)</span>`
                     }
+                    <span class="xv-tb-context-limit">物理上限: ${(p.modelSpec.maxContext >= 1000000 ? (p.modelSpec.maxContext/1000000).toFixed(0) + 'M' : (p.modelSpec.maxContext/1000).toFixed(0) + 'k')}</span>
                 </div>
             </div>
             <div class="xv-tb-hero-main">
@@ -1104,12 +1332,25 @@
                     <span style="color:#60a5fa;">● 蓝灯常驻: ${p.lorebook.constant.toLocaleString()} tk (${p.lorebook.constantCount}条)</span><br>
                     <span style="color:#4ade80;">● 绿灯触发: ${p.lorebook.triggered.toLocaleString()} tk (${p.lorebook.triggeredCount}条)</span>
                 </div>
+                ${p.lorebook.count > 0 ? `
+                <button type="button" class="xv-tb-lore-toggle-btn" id="xv-tb-lore-toggle-btn">
+                    <span>🔍 查看激活明细清单</span>
+                </button>
+                <div class="xv-tb-lore-breakdown" id="xv-tb-lore-breakdown">
+                    ${p.lorebook.entriesList.map(e => `
+                        <div class="xv-tb-lore-item">
+                            <span class="xv-tb-lore-name" title="${e.name}">● ${e.name}</span>
+                            <span class="xv-tb-lore-tag ${e.isConstant ? 'constant' : 'triggered'}">${e.isConstant ? '常驻' : '触发'} ${e.tokens} tk</span>
+                        </div>
+                    `).join('')}
+                </div>
+                ` : ''}
             </div>
 
             <div class="xv-tb-payload-card">
                 <div class="xv-tb-payload-card-title">
                     <span>⚙️ 预设与动态规则</span>
-                    <span style="font-size:10px; color:#a78bfa;">${p.preset.presetName}</span>
+                    <span style="font-size:10px; color:#a78bfa;">${p.preset.presetName} ${p.preset.isEstimate ? '(预估)' : ''}</span>
                 </div>
                 <div class="xv-tb-payload-card-val">${p.preset.total.toLocaleString()} <span style="font-size:11px; font-weight:normal; opacity:0.6;">tk</span></div>
                 <div class="xv-tb-payload-card-sub">
@@ -1280,19 +1521,22 @@
         updateCard.innerHTML = `
             <div class="xv-tb-update-card-title">
                 <span>📦 插件版本与 Git 热同步</span>
-                <span style="background:rgba(56,189,248,0.2); color:#38bdf8; font-size:10px; padding:2px 6px; border-radius:4px;">v2.1.0</span>
+                <span style="background:rgba(56,189,248,0.2); color:#38bdf8; font-size:10px; padding:2px 6px; border-radius:4px;">v2.2.0</span>
             </div>
             <div class="xv-tb-update-card-desc">
-                已接入 GitHub 仓库架构。后续有新版更新时，只需在酒馆【扩展】管理页点击【检查更新】，VPS 即在 1 秒内自动拉取最新版，<b>彻底告别手动传 zip、解压与删旧版</b>！
+                已接入 GitHub 仓库架构。后续有新版更新时，只需在 VPS 终端执行 <code>git pull</code> 即可 1 秒内自动拉取最新版，<b>彻底告别手动传 zip、解压与删旧版</b>！
             </div>
-            <button class="xv-tb-sync-btn" id="xv-tb-btn-sync-git">🔄 检查并重载数据</button>
+            <button class="xv-tb-sync-btn" id="xv-tb-btn-sync-git">🔄 实时重载与重新穿透 Token</button>
         `;
         updateCard.querySelector('#xv-tb-btn-sync-git').addEventListener('click', () => {
-            showToast('🔄 正在同步并重新计算...');
-            setTimeout(() => {
-                updateTokenHUD();
-                showToast('✅ 已同步至最新状态！');
-            }, 400);
+            showToast('🔄 正在重新穿透并计算数据...');
+            updateTokenHUD();
+            const content = document.getElementById('xv-tb-content');
+            if (content) {
+                renderTokensTab(content);
+                switchTab('tokens');
+            }
+            showToast('✅ 全量 Token 与模型已成功重载！');
         });
         container.appendChild(updateCard);
 
@@ -1385,12 +1629,79 @@
             hud.classList.remove('xv-tb-pulse-warn');
         }
 
-        // 若当前打开了 Tokens 标签页，同步重新渲染
+        // 若当前打开了 Tokens 标签页，平滑更新数字与红线，绝不销毁清空 DOM！
         const modal = document.getElementById('xv-tb-modal');
         const activeNav = modal ? modal.querySelector('.xv-tb-nav-btn.xv-tb-active') : null;
         if (modal && modal.style.display !== 'none' && activeNav && activeNav.dataset.tab === 'tokens') {
-            renderTokensTab(document.getElementById('xv-tb-content'));
+            const numEl = modal.querySelector('.xv-tb-hero-number');
+            if (numEl) {
+                numEl.textContent = p.totalInputTokens.toLocaleString();
+                numEl.style.color = grad.color;
+                numEl.style.textShadow = `0 0 16px ${grad.glow}`;
+            }
+            const badgeEl = modal.querySelector('.xv-tb-hero-badge');
+            if (badgeEl) {
+                badgeEl.textContent = grad.badge;
+                badgeEl.style.background = grad.glow;
+                badgeEl.style.color = grad.color;
+                badgeEl.style.border = `1px solid ${grad.color}`;
+            }
+            const gaugeEl = modal.querySelector('.xv-tb-gauge-fill');
+            if (gaugeEl) {
+                gaugeEl.style.width = `${grad.percent}%`;
+                gaugeEl.style.background = grad.color;
+                gaugeEl.style.boxShadow = `0 0 10px ${grad.color}`;
+            }
         }
+    }
+
+    // 注册酒馆原生扩展列表侧边栏折叠项
+    function registerExtensionSettingsDrawer() {
+        const container = document.getElementById('extensions_settings');
+        if (!container || document.getElementById('xv-tb-extension-drawer')) return;
+
+        const drawerDiv = document.createElement('div');
+        drawerDiv.id = 'xv-tb-extension-drawer';
+        drawerDiv.className = 'extension_settings';
+        drawerDiv.innerHTML = `
+            <div class="inline-drawer">
+                <div class="inline-drawer-toggle inline-drawer-header">
+                    <b>XV 随身百宝箱</b>
+                    <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                </div>
+                <div class="inline-drawer-content" style="display: none; padding: 10px 14px;">
+                    <div style="font-size:12px; margin-bottom:8px; opacity:0.85; line-height:1.5;">
+                        <b>XV 随身百宝箱 v2.2.0</b><br>
+                        全景真实 Token 监控 · 模型注意力红线 · 古法 2.0 阶段记忆归档
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                        <button id="xv-tb-ext-btn-open" class="menu_button" style="flex:1; min-width:110px;">🚀 打开百宝箱</button>
+                        <button id="xv-tb-ext-btn-refresh" class="menu_button" style="flex:1; min-width:110px;">🔄 重新计算 Token</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(drawerDiv);
+
+        const header = drawerDiv.querySelector('.inline-drawer-header');
+        const content = drawerDiv.querySelector('.inline-drawer-content');
+        const icon = drawerDiv.querySelector('.inline-drawer-icon');
+        if (header && content) {
+            header.addEventListener('click', () => {
+                const isOpen = content.style.display !== 'none';
+                content.style.display = isOpen ? 'none' : 'block';
+                if (icon) {
+                    icon.classList.toggle('down', isOpen);
+                    icon.classList.toggle('up', !isOpen);
+                }
+            });
+        }
+
+        drawerDiv.querySelector('#xv-tb-ext-btn-open')?.addEventListener('click', () => openModal('tokens'));
+        drawerDiv.querySelector('#xv-tb-ext-btn-refresh')?.addEventListener('click', () => {
+            updateTokenHUD();
+            showToast('✅ 已重新计算全量 Token 数据！');
+        });
     }
 
     // ==========================================
@@ -1418,7 +1729,7 @@
                         </svg>
                     </div>
                     <div class="xv-tb-title">XV 随身百宝箱</div>
-                    <div class="xv-tb-tagline">v2.1.0 · 全景 Token 监控</div>
+                    <div class="xv-tb-tagline">v2.2.0 · 全景 Token 监控</div>
                 </div>
                 <button class="xv-tb-close-btn" id="xv-tb-btn-close">✕</button>
             </div>
@@ -1430,6 +1741,7 @@
             </div>
             <div class="xv-tb-content" id="xv-tb-content"></div>
             <div class="xv-tb-editor-overlay" id="xv-tb-editor"></div>
+            <div class="xv-tb-archive-overlay" id="xv-tb-archive-overlay"></div>
         `;
         document.body.appendChild(modal);
 
@@ -1441,12 +1753,39 @@
         // 3. 挂载发送键旁的实时 Token 胶囊 (彻底移除旧工具箱图标，保持极简)
         injectToolbarButton();
 
-        // 4. ESC 关闭
+        // 4. 挂载酒馆原生扩展列表折叠项
+        registerExtensionSettingsDrawer();
+
+        // 5. ESC 关闭
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeModal();
         });
 
-        // 5. 输入框输入实时监听 (联动草稿 Token 重新计算)
+        // 6. 全局事件委托 (保障任何动态渲染下的按钮点击必应)
+        document.addEventListener('click', (e) => {
+            // 古法记忆归档触发
+            if (e.target && e.target.closest('#xv-tb-btn-open-archive')) {
+                e.preventDefault();
+                e.stopPropagation();
+                openArchiveModal();
+                return;
+            }
+            // 世界书明细展开
+            const loreToggle = e.target ? e.target.closest('#xv-tb-lore-toggle-btn') : null;
+            if (loreToggle) {
+                e.preventDefault();
+                e.stopPropagation();
+                const breakdown = document.getElementById('xv-tb-lore-breakdown');
+                if (breakdown) {
+                    const isShown = breakdown.classList.toggle('xv-tb-show');
+                    const span = loreToggle.querySelector('span');
+                    if (span) span.textContent = isShown ? '🔼 收起明细清单' : '🔍 查看激活明细清单';
+                }
+                return;
+            }
+        });
+
+        // 7. 输入框输入实时监听 (联动草稿 Token 重新计算)
         const textarea = document.getElementById('send_textarea');
         if (textarea) {
             let debounceTimer = null;
@@ -1456,7 +1795,7 @@
             });
         }
 
-        // 6. 全局监听设置变动（如下拉框切模型、切预设、开关复选框）
+        // 8. 全局监听设置变动（如下拉框切模型、切预设、开关复选框）
         document.addEventListener('change', (e) => {
             if (e.target && (e.target.id?.includes('model') || e.target.id?.includes('preset') || e.target.type === 'checkbox')) {
                 setTimeout(updateTokenHUD, 100);
@@ -1577,9 +1916,10 @@
             setupSTEventListeners();
         }
 
-        // 定时轮询保证输入栏重绘后 Token 胶囊始终挂载且多余图标被清理
+        // 定时轮询保证输入栏重绘后 Token 胶囊始终挂载、侧边栏扩展列表注册、且多余图标被清理
         setInterval(() => {
             ensureRemyStyles();
+            registerExtensionSettingsDrawer();
             const hud = document.getElementById('xv-tb-token-hud');
             const sendBtn = document.getElementById('send_but');
             const oldBtn = document.getElementById('xv-tb-toolbar-btn');
@@ -1592,5 +1932,5 @@
     }
 
     bootstrap();
-    console.log('[XV-Toolbox] XV 随身百宝箱 v2.1.0 已成功启动！');
+    console.log('[XV-Toolbox] XV 随身百宝箱 v2.2.0 已成功启动！');
 })();

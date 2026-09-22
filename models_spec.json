@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "updated_at": "2026-09-22",
+  "version": "2.2.0",
+  "updated_at": "2026-09-23",
   "note": "XV-Toolbox 官方模型规格与注意力红线数据库（支持自动匹配与在线热更新）",
   "models": {
     "gemini-3.1-pro-low": {
@@ -69,6 +69,28 @@
       "rpCrit": 45000,
       "desc": "Google 2.5 闪电模型 · 百万上下文，轻快敏捷。"
     },
+    "gemini-2.0-flash": {
+      "displayName": "Gemini 2.0 Flash",
+      "provider": "Google",
+      "maxContext": 1000000,
+      "reasoningEffort": "none",
+      "thinkingWarn": false,
+      "rpComfort": 18000,
+      "rpWarn": 35000,
+      "rpCrit": 45000,
+      "desc": "Google 2.0 极速多模态模型 · 100万超大窗口。"
+    },
+    "claude-3-7-sonnet": {
+      "displayName": "Claude 3.7 Sonnet",
+      "provider": "Anthropic",
+      "maxContext": 200000,
+      "reasoningEffort": "standard",
+      "thinkingWarn": false,
+      "rpComfort": 18000,
+      "rpWarn": 28000,
+      "rpCrit": 42000,
+      "desc": "Anthropic 顶级双模推理旗舰 · 200k 上下文，微表情与深度心理博弈顶级。"
+    },
     "claude-3-5-sonnet-20241022": {
       "displayName": "Claude 3.5 Sonnet (New)",
       "provider": "Anthropic",
@@ -91,6 +113,17 @@
       "rpCrit": 38000,
       "desc": "Anthropic 顶级文本文风模型 · 200k 上下文。"
     },
+    "claude-3-5-haiku": {
+      "displayName": "Claude 3.5 Haiku",
+      "provider": "Anthropic",
+      "maxContext": 200000,
+      "reasoningEffort": "none",
+      "thinkingWarn": false,
+      "rpComfort": 18000,
+      "rpWarn": 32000,
+      "rpCrit": 45000,
+      "desc": "Anthropic 极速轻量模型 · 200k 上下文，响应极快。"
+    },
     "claude-3-opus": {
       "displayName": "Claude 3 Opus",
       "provider": "Anthropic",
@@ -100,7 +133,7 @@
       "rpComfort": 12000,
       "rpWarn": 20000,
       "rpCrit": 32000,
-      "desc": "Anthropic 重量级推理模型 · 价格高昂，建议常驻在安全区内使用。"
+      "desc": "Anthropic 重量级推理模型 · 建议常驻在安全区内使用。"
     },
     "gpt-4o": {
       "displayName": "GPT-4o",
@@ -112,6 +145,28 @@
       "rpWarn": 25000,
       "rpCrit": 35000,
       "desc": "OpenAI 多模态旗舰模型 · 128k 上下文。"
+    },
+    "deepseek-reasoner": {
+      "displayName": "DeepSeek R1",
+      "provider": "DeepSeek",
+      "maxContext": 64000,
+      "reasoningEffort": "high",
+      "thinkingWarn": true,
+      "rpComfort": 14000,
+      "rpWarn": 25000,
+      "rpCrit": 35000,
+      "desc": "DeepSeek 深度强化推理模型 · 具备强链式思考能力。"
+    },
+    "deepseek-chat": {
+      "displayName": "DeepSeek V3",
+      "provider": "DeepSeek",
+      "maxContext": 64000,
+      "reasoningEffort": "none",
+      "thinkingWarn": false,
+      "rpComfort": 16000,
+      "rpWarn": 30000,
+      "rpCrit": 42000,
+      "desc": "DeepSeek 综合大模型 · 64k 上下文，文笔通顺流畅。"
     },
     "default": {
       "displayName": "标准兼容模型",
