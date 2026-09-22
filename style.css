@@ -1,0 +1,1302 @@
+/**
+ * XV's Toolbox (xv-toolbox) - 贝瑞旻同款极简纯净黑曜雾面磨砂玻璃美化样式
+ * 彻底告别浑浊蓝灰与紫色，对标 .xs-status-container 高级通透磨砂质感
+ * 命名空间隔离：所有样式以 #xv-tb- / .xv-tb- 开头，绝不污染宿主酒馆及其他插件
+ */
+
+:root {
+    /* 贝瑞旻同款极简纯净黑曜雾面磨砂玻璃调色盘 */
+    --xv-tb-bg-primary: rgba(12, 14, 20, 0.78);
+    --xv-tb-bg-header: rgba(16, 20, 28, 0.85);
+    --xv-tb-bg-card: rgba(255, 255, 255, 0.04);
+    --xv-tb-bg-card-hover: rgba(255, 255, 255, 0.08);
+    --xv-tb-border: rgba(255, 255, 255, 0.1);
+    --xv-tb-border-hover: rgba(255, 255, 255, 0.25);
+    --xv-tb-accent: #f0f0f0;
+    --xv-tb-accent-light: #ffffff;
+    --xv-tb-accent-dark: #b0b8c4;
+    --xv-tb-accent-glow: rgba(255, 255, 255, 0.15);
+    --xv-tb-text-main: #f8fafc;
+    --xv-tb-text-muted: rgba(255, 255, 255, 0.65);
+    --xv-tb-text-dim: rgba(255, 255, 255, 0.4);
+    --xv-tb-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    --xv-tb-radius: 12px;
+}
+
+/* ==========================================
+   1. 触发按钮 (Trigger Buttons)
+   ========================================== */
+
+/* 紧贴发送键左侧的工具栏图标 */
+#xv-tb-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: 0 4px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    align-self: center;
+}
+#xv-tb-toolbar-btn:hover, #xv-tb-toolbar-btn:active {
+    color: #ffffff;
+    transform: scale(1.12);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+}
+#xv-tb-toolbar-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* 屏幕边缘可选悬浮球 (Draggable FAB) */
+#xv-tb-floating-trigger {
+    display: none; /* 默认使用发送键旁图标，可在设置中开启 */
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--xv-tb-bg-primary);
+    border: 1px solid var(--xv-tb-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--xv-tb-shadow);
+    color: #ffffff;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    z-index: 9990;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    user-select: none;
+}
+#xv-tb-floating-trigger:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
+    transform: scale(1.08);
+}
+#xv-tb-floating-trigger svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+
+/* ==========================================
+   2. 遮罩层与自适应弹窗 (Modal & Bottom Sheet)
+   ========================================== */
+
+#xv-tb-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(4, 6, 10, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 99998;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+#xv-tb-backdrop.xv-tb-show {
+    display: block;
+    opacity: 1;
+}
+
+/* 弹窗主体（显式指定高度，彻底解决 WebKit / Safari 高度塌陷问题） */
+#xv-tb-modal {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92vw;
+    max-width: 580px;
+    height: 75vh !important;
+    height: 75dvh !important;
+    max-height: 720px;
+    min-height: 380px;
+    background: var(--xv-tb-bg-primary);
+    border: 1px solid var(--xv-tb-border);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: var(--xv-tb-shadow);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    z-index: 99999;
+    color: var(--xv-tb-text-main);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    box-sizing: border-box;
+    transition: opacity 0.2s ease;
+}
+#xv-tb-modal.xv-tb-show {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* 针对手机移动端 (iPhone Safari / Android) 针对性自适应 */
+@media (max-width: 768px) {
+    #xv-tb-modal {
+        top: 60px !important;
+        left: 4vw !important;
+        right: 4vw !important;
+        width: 92vw !important;
+        max-width: 92vw !important;
+        height: 75vh !important;
+        height: 75dvh !important;
+        max-height: 75dvh !important;
+        transform: none !important;
+        border-radius: 16px !important;
+    }
+}
+
+/* 顶部标题栏（固顶不随内容滚动） */
+.xv-tb-header {
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--xv-tb-bg-header);
+    border-bottom: 1px solid var(--xv-tb-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.xv-tb-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.xv-tb-title-icon {
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+}
+.xv-tb-title-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+.xv-tb-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--xv-tb-text-main);
+    letter-spacing: 0.5px;
+}
+.xv-tb-tagline {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.xv-tb-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--xv-tb-text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    line-height: 1;
+}
+.xv-tb-close-btn:hover {
+    color: var(--xv-tb-text-main);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 标签导航栏（固顶） */
+.xv-tb-nav {
+    flex-shrink: 0;
+    position: sticky;
+    top: 50px;
+    z-index: 19;
+    display: flex;
+    background: rgba(10, 13, 18, 0.7);
+    border-bottom: 1px solid var(--xv-tb-border);
+    padding: 0 12px;
+    gap: 4px;
+    overflow-x: auto;
+}
+.xv-tb-nav-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--xv-tb-text-muted);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.xv-tb-nav-btn:hover {
+    color: var(--xv-tb-text-main);
+}
+.xv-tb-nav-btn.xv-tb-active {
+    color: #ffffff;
+    font-weight: 600;
+    border-bottom-color: #ffffff;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+}
+
+/* 内容滚动区 */
+.xv-tb-content {
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.xv-tb-content::-webkit-scrollbar {
+    width: 5px;
+}
+.xv-tb-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+}
+
+/* ==========================================
+   3. Tab 1: 富文本生成组件 (Widgets)
+   ========================================== */
+
+.xv-tb-mode-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--xv-tb-border);
+    font-size: 11.5px;
+    color: var(--xv-tb-text-muted);
+}
+.xv-tb-mode-toggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    padding: 2px;
+    border: 1px solid var(--xv-tb-border);
+}
+.xv-tb-mode-opt {
+    background: transparent;
+    border: none;
+    color: var(--xv-tb-text-muted);
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.xv-tb-mode-opt.xv-tb-active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.xv-tb-widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+}
+.xv-tb-card {
+    background: var(--xv-tb-bg-card);
+    border: 1px solid var(--xv-tb-border);
+    border-radius: var(--xv-tb-radius);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.xv-tb-card:hover, .xv-tb-card:active {
+    background: var(--xv-tb-bg-card-hover);
+    border-color: var(--xv-tb-border-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.xv-tb-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.xv-tb-card-icon {
+    font-size: 18px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+}
+.xv-tb-card-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--xv-tb-text-main);
+}
+.xv-tb-card-badge {
+    margin-left: auto;
+    font-size: 9.5px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.xv-tb-card-desc {
+    font-size: 11.5px;
+    color: var(--xv-tb-text-muted);
+    line-height: 1.45;
+}
+
+/* ==========================================
+   4. Tab 2: 剧情纠偏与成人NSFW护航 (Steering)
+   ========================================== */
+
+.xv-tb-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 8px;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.4;
+}
+
+.xv-tb-group-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--xv-tb-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 4px 0 2px 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.xv-tb-steer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.xv-tb-steer-item {
+    background: var(--xv-tb-bg-card);
+    border: 1px solid var(--xv-tb-border);
+    border-radius: var(--xv-tb-radius);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: all 0.15s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.xv-tb-steer-item:hover, .xv-tb-steer-item:active {
+    background: var(--xv-tb-bg-card-hover);
+    border-color: var(--xv-tb-border-hover);
+}
+.xv-tb-steer-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex: 1;
+}
+.xv-tb-steer-icon {
+    font-size: 16px;
+    margin-top: 1px;
+}
+.xv-tb-steer-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.xv-tb-steer-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--xv-tb-text-main);
+}
+.xv-tb-steer-desc {
+    font-size: 11px;
+    color: var(--xv-tb-text-muted);
+    line-height: 1.35;
+}
+.xv-tb-steer-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.xv-tb-append-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.xv-tb-append-btn:hover, .xv-tb-append-btn:active {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+}
+.xv-tb-edit-btn {
+    background: transparent;
+    border: none;
+    color: var(--xv-tb-text-dim);
+    font-size: 13px;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+}
+.xv-tb-edit-btn:hover {
+    color: var(--xv-tb-text-main);
+}
+
+/* ==========================================
+   5. Tab 3: 自定义与配置 (Settings)
+   ========================================== */
+
+.xv-tb-setting-row {
+    background: var(--xv-tb-bg-card);
+    border: 1px solid var(--xv-tb-border);
+    border-radius: var(--xv-tb-radius);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.xv-tb-setting-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.xv-tb-setting-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--xv-tb-text-main);
+}
+.xv-tb-setting-desc {
+    font-size: 11px;
+    color: var(--xv-tb-text-muted);
+}
+.xv-tb-select {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--xv-tb-border);
+    color: var(--xv-tb-text-main);
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* 编辑器覆盖层 */
+.xv-tb-editor-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(12, 14, 20, 0.96);
+    padding: 20px;
+    box-sizing: border-box;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 50;
+}
+.xv-tb-editor-overlay.xv-tb-show {
+    display: flex;
+}
+.xv-tb-editor-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+}
+.xv-tb-textarea {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--xv-tb-border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--xv-tb-text-main);
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+}
+.xv-tb-textarea:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+.xv-tb-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* 按钮规范 */
+.xv-tb-btn {
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+}
+.xv-tb-btn-cancel {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--xv-tb-text-muted);
+    border: 1px solid var(--xv-tb-border);
+}
+.xv-tb-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--xv-tb-text-main);
+}
+.xv-tb-btn-save {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.xv-tb-btn-save:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: #ffffff;
+}
+
+/* ==========================================
+   6. 消息通知提示气泡 (Toast)
+   ========================================== */
+
+#xv-tb-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(16, 20, 28, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 12.5px;
+    color: #ffffff;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    z-index: 100001;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+#xv-tb-toast.xv-tb-show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ==========================================
+   7. 贝瑞旻全局常驻美化保障 (Global Status Bar & Chapter Header)
+   彻底防止 iPhone Safari / 长文本滚动导致第0条首条消息卸载后状态栏/章节栏丢失美化
+   ========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Playfair+Display:ital,wght@1,400&family=Inter:wght@300;400;600&display=swap');
+
+/* 顶部章节栏样式 */
+.zc-status-wrapper {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin: 14px 0 2px 0 !important;
+    font-family: 'Noto Serif SC', serif !important;
+}
+.zc-status-box {
+    text-align: right !important;
+    padding-right: 18px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+    background: transparent !important;
+    max-width: 400px !important;
+    position: relative !important;
+}
+.zc-status-box::before {
+    content: '' !important;
+    position: absolute !important;
+    right: -2px !important;
+    top: 0 !important;
+    height: 30% !important;
+    width: 3px !important;
+    background: #ffcccc !important;
+    box-shadow: 0 0 10px #ffcccc !important;
+    opacity: 0.8 !important;
+}
+.zc-meta-info {
+    font-family: 'Playfair Display', serif !important;
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 6px !important;
+}
+.zc-chapter-head {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #f0f0f0 !important;
+    line-height: 1.4 !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 6px !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+}
+.zc-chapter-sub {
+    font-size: 12px !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-style: italic !important;
+    line-height: 1.6 !important;
+}
+
+/* 底部折叠状态栏容器 */
+details.xs-status-container {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    margin: 4px 0 !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    color: #eee !important;
+    overflow: hidden !important;
+}
+details.xs-status-container + details.xs-status-container {
+    margin-top: 4px !important;
+}
+
+/* 折叠标题行（消除 iOS Safari 默认黑三角，使用精巧旋转箭头） */
+details.xs-status-container > summary.xs-status-summary {
+    padding: 8px 14px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: transparent !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    list-style: none !important;
+    color: #eee !important;
+    outline: none !important;
+}
+details.xs-status-container > summary.xs-status-summary::-webkit-details-marker {
+    display: none !important;
+}
+details.xs-status-container > summary.xs-status-summary::marker {
+    display: none !important;
+}
+details.xs-status-container > summary.xs-status-summary::after {
+    content: '' !important;
+    width: 6px !important;
+    height: 6px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.8) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.8) !important;
+    transform: rotate(45deg) !important;
+    transition: transform 0.2s ease !important;
+    margin-right: 4px !important;
+    display: inline-block !important;
+}
+details.xs-status-container[open] > summary.xs-status-summary::after {
+    transform: rotate(225deg) !important;
+}
+
+/* 内容区域与条目排版 */
+.xs-content-pad {
+    padding: 4px 14px 8px 14px !important;
+}
+.xs-content-pad > *:first-child {
+    margin-top: 0 !important;
+    padding-top: 2px !important;
+}
+.xs-content-pad > br:first-child {
+    display: none !important;
+}
+.xs-content-pad p {
+    margin: 0 !important;
+}
+.xs-row-item {
+    padding: 6px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+.xs-row-item:last-child {
+    border-bottom: none !important;
+}
+.xs-lbl {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+    display: block !important;
+}
+.xs-val {
+    color: #fff !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    text-align: justify !important;
+}
+.xs-warn {
+    color: #ffcccc !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 8px rgba(255, 204, 204, 0.5) !important;
+}
+.xs-scroll-box {
+    max-height: 120px !important;
+    overflow-y: auto !important;
+    font-size: 12px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+}
+.xs-scroll-box::-webkit-scrollbar {
+    display: none !important;
+}
+.xs-scroll-box-large {
+    max-height: 200px !important;
+}
+.xs-quote-block {
+    background: rgba(255, 255, 255, 0.05) !important;
+    padding: 8px 10px !important;
+    border-radius: 4px !important;
+    margin-top: 6px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    border-left: 2px solid rgba(255, 255, 255, 0.4) !important;
+}
+.xs-god-text {
+    font-size: 10px !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    text-align: right !important;
+    margin-top: 5px !important;
+    font-style: italic !important;
+}
+.xs-list-item {
+    display: flex !important;
+    gap: 8px !important;
+    padding: 3px 0 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    align-items: flex-start !important;
+}
+.xs-check {
+    color: #ffcccc !important;
+    opacity: 0.9 !important;
+    font-family: monospace !important;
+}
+.xs-note-section {
+    padding: 8px 0 !important;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1) !important;
+}
+.xs-note-section:first-child {
+    padding-top: 2px !important;
+}
+.xs-note-section:last-child {
+    border-bottom: none !important;
+}
+.xs-note-title {
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+    color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+.xs-note-title::before {
+    content: '' !important;
+    width: 4px !important;
+    height: 4px !important;
+    background: #ffcccc !important;
+    border-radius: 50% !important;
+    opacity: 0.8 !important;
+}
+
+/* ==========================================
+   XV-Toolbox v2.0 - Token 监控与古法2.0归档样式
+   ========================================== */
+
+/* 1. 发送键旁的实时 Token 迷你胶囊 (HUD) */
+#xv-tb-token-hud {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 28px;
+    padding: 0 9px;
+    margin: 0 4px;
+    background: rgba(14, 18, 26, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #f8fafc;
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    align-self: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+#xv-tb-token-hud:hover, #xv-tb-token-hud:active {
+    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.2);
+}
+#xv-tb-token-hud.xv-tb-pulse-warn {
+    animation: xv-tb-pulse 2s infinite ease-in-out;
+}
+@keyframes xv-tb-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(250, 204, 21, 0); }
+}
+
+/* 2. 导航栏 Token 监控专属标签 */
+.xv-tb-nav-btn[data-tab="tokens"] {
+    position: relative;
+}
+
+/* 3. 总体健康大盘卡片 (Hero Card) */
+.xv-tb-hero-card {
+    background: linear-gradient(135deg, rgba(18, 24, 35, 0.85), rgba(12, 16, 24, 0.85));
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+.xv-tb-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.xv-tb-model-badge {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.xv-tb-thinking-tag {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.xv-tb-thinking-tag.high {
+    background: rgba(251, 146, 60, 0.18);
+    border: 1px solid rgba(251, 146, 60, 0.4);
+    color: #fdba74;
+}
+.xv-tb-thinking-tag.low {
+    background: rgba(74, 222, 128, 0.15);
+    border: 1px solid rgba(74, 222, 128, 0.35);
+    color: #86efac;
+}
+.xv-tb-hero-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 12px 0 8px 0;
+}
+.xv-tb-hero-number-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+.xv-tb-hero-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.xv-tb-hero-unit {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+}
+.xv-tb-hero-badge {
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+}
+.xv-tb-gauge-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    margin: 8px 0 10px 0;
+}
+.xv-tb-gauge-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+}
+.xv-tb-hero-limits {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.4;
+}
+.xv-tb-archive-trigger-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+.xv-tb-archive-trigger-btn:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(129, 140, 248, 0.3));
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
+}
+
+/* 4. 分组标题与网格 */
+.xv-tb-section-header {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 16px 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+}
+.xv-tb-section-header-dim {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 22px 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.xv-tb-payload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+/* 核心置顶卡片（高亮对比度） */
+.xv-tb-payload-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 12px;
+    transition: all 0.2s ease;
+}
+.xv-tb-payload-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+.xv-tb-payload-card-title {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.xv-tb-payload-card-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+}
+.xv-tb-payload-card-sub {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+/* 次要沉底卡片（浅色弱化） */
+.xv-tb-payload-card-dim {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px 12px;
+    opacity: 0.75;
+}
+.xv-tb-payload-card-dim .xv-tb-payload-card-title {
+    color: rgba(255, 255, 255, 0.45);
+}
+.xv-tb-payload-card-dim .xv-tb-payload-card-val {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+.xv-tb-payload-card-dim .xv-tb-payload-card-sub {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* 5. 古法2.0 阶段记忆归档抽屉 (Archive Modal) */
+.xv-tb-archive-drawer {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.96);
+    width: 92%;
+    max-width: 480px;
+    max-height: 85vh;
+    background: rgba(14, 18, 26, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    z-index: 99999;
+    overflow-y: auto;
+    color: #f1f5f9;
+    box-sizing: border-box;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.xv-tb-archive-drawer.xv-tb-show {
+    display: block;
+    transform: translate(-50%, -50%) scale(1);
+}
+.xv-tb-archive-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+}
+.xv-tb-archive-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.xv-tb-range-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+.xv-tb-floor-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+}
+.xv-tb-floor-input {
+    width: 76px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    padding: 5px 8px;
+    outline: none;
+    font-family: inherit;
+}
+.xv-tb-floor-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+.xv-tb-buffer-note {
+    background: rgba(56, 189, 248, 0.12);
+    border-left: 3px solid #38bdf8;
+    padding: 8px 10px;
+    border-radius: 0 6px 6px 0;
+    font-size: 11.5px;
+    color: #bae6fd;
+    line-height: 1.5;
+    margin: 10px 0 14px 0;
+}
+.xv-tb-textarea-large {
+    width: 100%;
+    height: 140px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 12.5px;
+    padding: 10px;
+    line-height: 1.6;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, monospace, sans-serif;
+    outline: none;
+    resize: vertical;
+}
+.xv-tb-textarea-large:focus {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+.xv-tb-keywords-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 12px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    outline: none;
+    margin-top: 6px;
+}
+.xv-tb-archive-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.xv-tb-btn-cancel {
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    cursor: pointer;
+}
+.xv-tb-btn-confirm {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 6. 设置面板：Git 更新卡片 */
+.xv-tb-update-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+.xv-tb-update-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.xv-tb-update-card-desc {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+.xv-tb-sync-btn {
+    padding: 7px 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.xv-tb-sync-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+
