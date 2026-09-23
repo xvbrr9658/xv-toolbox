@@ -1,5 +1,5 @@
 /**
- * XV's Toolbox (xv-toolbox) - 核心控制脚本 v2.4.0 (极速冷静与原生全息校准版)
+ * XV's Toolbox (xv-toolbox) - 核心控制脚本 v2.4.1 (极速冷静与原生全息校准版)
  * 专为深度沉浸式长程剧情打造的随身工具箱：
  * 1. 全景真实 Token 监控穿透引擎 & 模型注意力健康红线（零网络阻塞·超低功耗瞬时计算）
  * 2. 古法 2.0 阶段记忆归档面板（保留文风对照样本与手动指定隐藏楼层）
@@ -7,7 +7,7 @@
  * 4. 富文本组件一键发包（报纸/大盘/论坛/小剧场/独白/推剧情）
  * 5. Git 规范仓库化热更新
  * 作者: xv & AI Assistant
- * 版本: v2.4.0
+ * 版本: v2.4.1
  */
 
 (function () {
@@ -609,17 +609,22 @@
     // ==========================================
     // 2. 超低功耗高精度 Token 统计引擎 (Zero-Lag Native Caching)
     // ==========================================
-    // 基础纯内存分词算法：遵循 SillyTavern 官方原生 guesstimate 算法 (st_tokenizers.js:166)
-    // 纯 TextEncoder 字节比换算，微秒级运算，绝对杜绝任何同步阻塞网络请求 (Zero synchronous AJAX)
+    // 基础分词算法：遵循现代大模型（Claude / GPT / Gemini）中英混合加权分词标准
+    // CJK 汉字与标点按 ~2.164 token/字加权，ASCII/非汉字按 3.35 字节/token，微秒级运算
     function fastCountTokens(text) {
         if (!text) return 0;
         if (typeof text !== 'string') text = String(text);
         if (!text.trim()) return 0;
         try {
-            const byteLength = new TextEncoder().encode(text).length;
-            return Math.ceil(byteLength / 3.35);
+            // 统计 CJK 汉字与全角标点
+            const cjkMatches = text.match(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g);
+            const cjkCount = cjkMatches ? cjkMatches.length : 0;
+            // 非汉字部分按 UTF-8 字节比计算
+            const nonCjkText = text.replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g, '');
+            const nonCjkBytes = nonCjkText ? new TextEncoder().encode(nonCjkText).length : 0;
+            return Math.ceil(cjkCount * 2.164 + (nonCjkBytes / 3.35));
         } catch (e) {
-            return Math.ceil(text.length * 1.15);
+            return Math.ceil(text.length * 1.5);
         }
     }
 
@@ -642,7 +647,7 @@
         return count;
     }
 
-    // 世界书条目 Token 缓存 (基于内容指纹，永不重复计算)
+    // 世界书条目 Token 缓存 (优先穿透酒馆原生同步分词接口，指纹缓存永不重复计算)
     const entryTokenCache = new Map();
     function getEntryTokenCount(entry) {
         if (!entry || !entry.content) return 0;
@@ -650,11 +655,32 @@
             return entry.token_count;
         }
         const content = String(entry.content);
-        const cacheKey = `${entry.uid ?? ''}:${content.length}:${content.slice(0, 30)}`;
+        const cacheKey = `${entry.world ?? ''}:${entry.uid ?? ''}:${content.length}:${content.slice(0, 30)}`;
         if (entryTokenCache.has(cacheKey)) {
             return entryTokenCache.get(cacheKey);
         }
-        const count = fastCountTokens(content);
+
+        let count = 0;
+        // 1. 最高优先级：直接调用 SillyTavern 原生同步分词接口 (100% 对齐世界书编辑器 Token 标签)
+        try {
+            const ctx = (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') 
+                ? window.SillyTavern.getContext() 
+                : null;
+            if (ctx && typeof ctx.getTokenCount === 'function') {
+                const nativeCount = ctx.getTokenCount(content);
+                if (typeof nativeCount === 'number' && nativeCount > 0) {
+                    count = nativeCount;
+                }
+            }
+        } catch (e) {
+            // 静默降级
+        }
+
+        // 2. 原生接口未捕获时的无感保底：高精度 CJK 加权分词引擎
+        if (!count) {
+            count = fastCountTokens(content);
+        }
+
         entryTokenCache.set(cacheKey, count);
         return count;
     }
@@ -670,6 +696,9 @@
         textTokenCache.set(key, count);
         return count;
     }
+
+    // 异步加载世界书数据内存快照缓存 (避免重复网络拉取)
+    const loadedWorldBooksCache = new Map();
 
     function inspectPayload() {
         let ctx = null;
@@ -779,25 +808,50 @@
         if (Array.isArray(globalWI)) globalWI.forEach(n => n && activeBookNames.add(String(n).trim()));
         else if (typeof globalWI === 'string' && globalWI.trim()) activeBookNames.add(globalWI.trim());
 
-        // (D) DOM 全局世界书下拉框勾选项
-        const globalSelect = document.getElementById('world_info_global') || document.getElementById('global_world_info');
-        if (globalSelect) {
-            Array.from(globalSelect.selectedOptions || []).forEach(opt => {
-                if (opt.value && opt.value !== 'None' && opt.value !== '') activeBookNames.add(opt.value.trim());
-            });
-        }
+        // (D) DOM 原生世界书下拉勾选项 (抓取 #world_info 等真实控件)
+        const worldSelects = [
+            document.getElementById('world_info'),
+            document.getElementById('world_info_global'),
+            document.getElementById('global_world_info'),
+            document.getElementById('chat_world_info')
+        ];
+        worldSelects.forEach(sel => {
+            if (sel && sel.selectedOptions) {
+                Array.from(sel.selectedOptions).forEach(opt => {
+                    const name = (opt.textContent || opt.text || '').trim();
+                    if (name && name !== 'None' && name !== 'Select World Info' && !name.startsWith('--')) {
+                        activeBookNames.add(name);
+                    }
+                });
+            }
+        });
 
-        // 3.3 从 window.world_info_data 提取激活世界书中的所有条目
-        if (window.world_info_data && typeof window.world_info_data === 'object') {
-            activeBookNames.forEach(bookName => {
-                const book = window.world_info_data[bookName];
-                if (book) {
-                    extractEntriesFromBook(book).forEach(e => {
-                        if (e) rawEntriesWithSource.push({ entry: e, source: bookName });
-                    });
-                }
-            });
-        }
+        // 3.3 从酒馆多级数据源与内存快照中提取激活世界书条目
+        activeBookNames.forEach(bookName => {
+            let book = null;
+            if (loadedWorldBooksCache.has(bookName)) {
+                book = loadedWorldBooksCache.get(bookName);
+            } else if (window.world_info_data && window.world_info_data[bookName]) {
+                book = window.world_info_data[bookName];
+            } else if (window.world_info && window.world_info[bookName]) {
+                book = window.world_info[bookName];
+            }
+
+            // 触发原生异步加载预热
+            if (!book && ctx && typeof ctx.loadWorldInfo === 'function') {
+                try {
+                    ctx.loadWorldInfo(bookName).then(data => {
+                        if (data) loadedWorldBooksCache.set(bookName, data);
+                    }).catch(() => {});
+                } catch (e) {}
+            }
+
+            if (book) {
+                extractEntriesFromBook(book).forEach(e => {
+                    if (e) rawEntriesWithSource.push({ entry: e, source: bookName });
+                });
+            }
+        });
 
         // 3.4 会话级开关覆盖穿透
         const disabledOverrides = new Set();
@@ -807,12 +861,27 @@
         const metaEnabled = ctx?.chatMetadata?.enabled_entries || window.chat_metadata?.enabled_entries;
         if (Array.isArray(metaEnabled)) metaEnabled.forEach(id => enabledOverrides.add(String(id)));
 
-        // 3.5 过滤并统计条目 (防 UID 跨书串扰)
+        // 3.5 过滤并统计条目 (防 UID 跨书串扰 + 原生角色专属过滤 characterFilter)
         const seenCompoundKeys = new Set();
         rawEntriesWithSource.forEach(({ entry, source }, idx) => {
             if (!entry) return;
             const content = entry.content ? String(entry.content).trim() : '';
             if (!content) return;
+
+            // 原生角色过滤器校验 (严格防止属于其他角色的条目/NSFW泄漏到当前角色)
+            if (entry.characterFilter && Array.isArray(entry.characterFilter.names) && entry.characterFilter.names.length > 0) {
+                const charAvatar = (activeChar?.avatar ? activeChar.avatar.replace(/\.[^/.]+$/, '') : '').toLowerCase();
+                const charName = (activeChar?.name || '').toLowerCase();
+                const isMatch = entry.characterFilter.names.some(n => {
+                    if (!n) return false;
+                    const cleanN = String(n).trim().toLowerCase().replace(/\.[^/.]+$/, '');
+                    return cleanN === charAvatar || cleanN === charName || charAvatar.includes(cleanN) || charName.includes(cleanN);
+                });
+                const isFilteredOut = entry.characterFilter.isExclude ? isMatch : !isMatch;
+                if (isFilteredOut) {
+                    return; // 命中排除过滤，跳过
+                }
+            }
 
             const entryUid = entry.uid !== undefined ? String(entry.uid) : (entry.id !== undefined ? String(entry.id) : String(idx));
             const entryComment = entry.comment ? String(entry.comment).trim() : '';
@@ -853,6 +922,14 @@
                 lorebook.triggeredCount++;
             }
             lorebook.count++;
+        });
+
+        // 蓝灯常驻排在前，同类条目按 Token 消耗由大到小排序
+        lorebook.entriesList.sort((a, b) => {
+            if (a.isConstant !== b.isConstant) {
+                return a.isConstant ? -1 : 1;
+            }
+            return b.tokens - a.tokens;
         });
 
         lorebook.total = lorebook.constant;
@@ -1854,7 +1931,7 @@
                 </div>
                 <div class="inline-drawer-content" style="display: none; padding: 10px 14px;">
                     <div style="font-size:12px; margin-bottom:8px; opacity:0.85; line-height:1.5;">
-                        <b>XV 随身百宝箱 v2.4.0</b><br>
+                        <b>XV 随身百宝箱 v2.4.1</b><br>
                         全景真实 Token 监控 · 模型注意力红线 · 古法 2.0 阶段记忆归档
                     </div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
@@ -1912,7 +1989,7 @@
                         </svg>
                     </div>
                     <div class="xv-tb-title">XV 随身百宝箱</div>
-                    <div class="xv-tb-tagline">v2.4.0 · 原生全息校准</div>
+                    <div class="xv-tb-tagline">v2.4.1 · 原生全息校准</div>
                 </div>
                 <button class="xv-tb-close-btn" id="xv-tb-btn-close">✕</button>
             </div>
@@ -2152,5 +2229,5 @@
     }
 
     bootstrap();
-    console.log('[XV-Toolbox] XV 随身百宝箱 v2.4.0 (极速冷静与原生全息校准版) 已成功启动！');
+    console.log('[XV-Toolbox] XV 随身百宝箱 v2.4.1 (极速冷静与原生全息校准版) 已成功启动！');
 })();
