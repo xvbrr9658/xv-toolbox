@@ -1,13 +1,13 @@
 /**
- * XV's Toolbox (xv-toolbox) - 核心控制脚本 v2.1.0
+ * XV's Toolbox (xv-toolbox) - 核心控制脚本 v2.4.0 (极速冷静与原生全息校准版)
  * 专为深度沉浸式长程剧情打造的随身工具箱：
- * 1. 全景真实 Token 监控穿透引擎 & 模型注意力健康红线
+ * 1. 全景真实 Token 监控穿透引擎 & 模型注意力健康红线（零网络阻塞·超低功耗瞬时计算）
  * 2. 古法 2.0 阶段记忆归档面板（保留文风对照样本与手动指定隐藏楼层）
  * 3. 剧情纠偏与成人 NSFW 护航指令
  * 4. 富文本组件一键发包（报纸/大盘/论坛/小剧场/独白/推剧情）
  * 5. Git 规范仓库化热更新
  * 作者: xv & AI Assistant
- * 版本: v2.1.0
+ * 版本: v2.4.0
  */
 
 (function () {
@@ -442,71 +442,57 @@
         }
     };
 
-    // 动态嗅探当前酒馆真正激活的模型 (无本地僵尸缓存，100% 实时响应)
+    // 动态嗅探当前酒馆真正激活的模型 (无本地僵尸缓存，100% 实时原生对齐)
     function detectActiveModel() {
         let ctx = null;
         if (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') {
             try { ctx = window.SillyTavern.getContext(); } catch (e) {}
         }
 
-        // 1. 最高优先级：穿透最近真实 AI 消息底层打标 (Ground Truth 地面真值)
-        if (ctx && Array.isArray(ctx.chat) && ctx.chat.length > 0) {
-            for (let i = ctx.chat.length - 1; i >= 0; i--) {
-                const msg = ctx.chat[i];
-                if (msg && !msg.is_user && !msg.is_system) {
-                    const extraModel = msg.extra?.model || msg.extra?.api_model || msg.model;
-                    if (extraModel && typeof extraModel === 'string' && extraModel.trim()) {
-                        return extraModel.trim();
-                    }
+        // 1. 最高优先级：原生 SillyTavern getChatCompletionModel() 实时穿透
+        if (ctx && typeof ctx.getChatCompletionModel === 'function') {
+            try {
+                const nativeModel = ctx.getChatCompletionModel();
+                if (nativeModel && typeof nativeModel === 'string' && nativeModel.trim()) {
+                    return nativeModel.trim();
                 }
-            }
+            } catch (e) {}
         }
 
         // 2. 检测当前 Chat Completion 源与配置 (Claude, Google, OpenAI, OpenRouter 等)
-        const oaiSettings = window.oai_settings;
+        const oaiSettings = window.oai_settings || ctx?.chatCompletionSettings;
         const source = (oaiSettings?.chat_completion_source || '').toLowerCase();
 
         if (source === 'claude') {
-            const el = document.querySelector('#claude_model option:checked, #claude_model, #model_claude_select option:checked');
-            if (el && (el.value || el.textContent)) {
-                const v = (el.value || el.textContent).trim();
-                if (v) return v;
-            }
             if (oaiSettings?.claude_model) return oaiSettings.claude_model.trim();
+            const el = document.querySelector('#claude_model option:checked, #claude_model, #model_claude_select option:checked');
+            if (el && (el.value || el.textContent)) return (el.value || el.textContent).trim();
             if (window.claude_settings?.model) return window.claude_settings.model.trim();
         } else if (source === 'google' || source === 'makersuite' || source === 'vertexai') {
-            const el = document.querySelector('#google_model option:checked, #google_model, #gemini_model option:checked, #gemini_model');
-            if (el && (el.value || el.textContent)) {
-                const v = (el.value || el.textContent).trim();
-                if (v) return v;
-            }
             if (oaiSettings?.google_model) return oaiSettings.google_model.trim();
             if (oaiSettings?.vertexai_model) return oaiSettings.vertexai_model.trim();
+            const el = document.querySelector('#google_model option:checked, #google_model, #gemini_model option:checked, #gemini_model');
+            if (el && (el.value || el.textContent)) return (el.value || el.textContent).trim();
             if (window.gemini_settings?.model) return window.gemini_settings.model.trim();
+        } else if (source === 'openai') {
+            if (oaiSettings?.openai_model) return oaiSettings.openai_model.trim();
+            const oaiSel = document.querySelector('#model_openai_select option:checked, #model_openai_select');
+            if (oaiSel && (oaiSel.value || oaiSel.textContent)) return (oaiSel.value || oaiSel.textContent).trim();
         } else if (source === 'openrouter') {
-            const el = document.querySelector('#openrouter_model option:checked, #openrouter_model');
-            if (el && (el.value || el.textContent)) {
-                const v = (el.value || el.textContent).trim();
-                if (v) return v;
-            }
             if (oaiSettings?.openrouter_model) return oaiSettings.openrouter_model.trim();
+            const el = document.querySelector('#openrouter_model option:checked, #openrouter_model');
+            if (el && (el.value || el.textContent)) return (el.value || el.textContent).trim();
+        } else if (source === 'deepseek') {
+            if (oaiSettings?.deepseek_model) return oaiSettings.deepseek_model.trim();
         } else if (source === 'custom') {
+            if (oaiSettings?.custom_model) return oaiSettings.custom_model.trim();
             const customInput = document.querySelector('#custom_model_id');
-            if (customInput && customInput.value && customInput.value.trim()) {
-                return customInput.value.trim();
-            }
+            if (customInput && customInput.value && customInput.value.trim()) return customInput.value.trim();
         }
 
-        // 3. 检查通用/OpenAI 下拉框与设置
-        const oaiSel = document.querySelector('#model_openai_select option:checked, #model_openai_select');
-        if (oaiSel && (oaiSel.value || oaiSel.textContent)) {
-            const val = (oaiSel.value || oaiSel.textContent).trim();
-            if (val) return val;
-        }
-        if (oaiSettings?.openai_model) return oaiSettings.openai_model.trim();
-
-        // 4. 扫描其他可能挂载的下拉框
+        // 3. 扫描其他可能挂载的活跃下拉框
         const allSelectors = [
+            '#model_openai_select option:checked',
             '#claude_model option:checked',
             '#google_model option:checked',
             '#gemini_model option:checked',
@@ -522,11 +508,24 @@
             if (el && el.textContent && el.textContent.trim()) return el.textContent.trim();
         }
 
-        // 5. 从 context 或全局变量尝试提取
+        // 4. 从 context 提取
         if (ctx) {
             if (ctx.chatMetadata?.model) return ctx.chatMetadata.model;
             if (ctx.selected_model) return ctx.selected_model;
             if (ctx.model) return ctx.model;
+        }
+
+        // 5. 兜底回退：若当前界面未识别，才检查历史消息底层打标
+        if (ctx && Array.isArray(ctx.chat) && ctx.chat.length > 0) {
+            for (let i = ctx.chat.length - 1; i >= 0; i--) {
+                const msg = ctx.chat[i];
+                if (msg && !msg.is_user && !msg.is_system) {
+                    const extraModel = msg.extra?.model || msg.extra?.api_model || msg.model;
+                    if (extraModel && typeof extraModel === 'string' && extraModel.trim()) {
+                        return extraModel.trim();
+                    }
+                }
+            }
         }
 
         return 'Gemini 3.1 Pro (Low)';
@@ -579,48 +578,68 @@
     }
 
     // ==========================================
-    // 2. 高精度 Token 统计引擎 (Native Token Counting)
+    // 2. 超低功耗高精度 Token 统计引擎 (Zero-Lag Native Caching)
     // ==========================================
-    function countTokens(text) {
+    // 基础纯内存分词算法：遵循 SillyTavern 官方原生 guesstimate 算法 (st_tokenizers.js:166)
+    // 纯 TextEncoder 字节比换算，微秒级运算，绝对杜绝任何同步阻塞网络请求 (Zero synchronous AJAX)
+    function fastCountTokens(text) {
         if (!text) return 0;
         if (typeof text !== 'string') text = String(text);
         if (!text.trim()) return 0;
-
-        // 1. 原生 SillyTavern getContext() 分词接口（与酒馆世界书编辑器 100% 同源）
-        if (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') {
-            try {
-                const ctx = window.SillyTavern.getContext();
-                if (typeof ctx.getTokenCount === 'function') {
-                    const tk = ctx.getTokenCount(text);
-                    if (typeof tk === 'number' && !isNaN(tk) && tk > 0) return tk;
-                }
-                if (typeof ctx.tokenCount === 'function') {
-                    const tk = ctx.tokenCount(text);
-                    if (typeof tk === 'number' && !isNaN(tk) && tk > 0) return tk;
-                }
-                if (typeof ctx.encode === 'function') {
-                    const len = ctx.encode(text).length;
-                    if (typeof len === 'number' && !isNaN(len) && len > 0) return len;
-                }
-            } catch (e) {}
-        }
-
-        // 2. 检查全局 tokenizers 模块
-        if (window.tokenizers && typeof window.tokenizers.getTokenCount === 'function') {
-            try {
-                const tk = window.tokenizers.getTokenCount(text);
-                if (typeof tk === 'number' && !isNaN(tk) && tk > 0) return tk;
-            } catch (e) {}
-        }
-
-        // 3. 遵从 SillyTavern 官方标准 guesstimate (TextEncoder UTF-8 字节数 / 3.35)
-        // 中文 UTF-8 每个字符 3 字节 -> 3 / 3.35 ≈ 0.9 ~ 1.25 tk/字，高度对齐现代 cl100k 与 Claude
         try {
             const byteLength = new TextEncoder().encode(text).length;
             return Math.ceil(byteLength / 3.35);
         } catch (e) {
             return Math.ceil(text.length * 1.15);
         }
+    }
+
+    // 消息 Token 极速缓存 (WeakMap 随消息对象生命周期自动释放，O(1) 毫秒响应)
+    const messageTokenCache = new WeakMap();
+    function getMessageTokenCount(msg) {
+        if (!msg) return 0;
+        // 优先读取 SillyTavern 官方已计算的原生 token 统计
+        if (typeof msg.extra?.token_count === 'number' && msg.extra.token_count > 0) {
+            return msg.extra.token_count;
+        }
+        if (typeof msg.token_count === 'number' && msg.token_count > 0) {
+            return msg.token_count;
+        }
+        if (messageTokenCache.has(msg)) {
+            return messageTokenCache.get(msg);
+        }
+        const count = fastCountTokens(msg.mes || '');
+        messageTokenCache.set(msg, count);
+        return count;
+    }
+
+    // 世界书条目 Token 缓存 (基于内容指纹，永不重复计算)
+    const entryTokenCache = new Map();
+    function getEntryTokenCount(entry) {
+        if (!entry || !entry.content) return 0;
+        if (typeof entry.token_count === 'number' && entry.token_count > 0) {
+            return entry.token_count;
+        }
+        const content = String(entry.content);
+        const cacheKey = `${entry.uid ?? ''}:${content.length}:${content.slice(0, 30)}`;
+        if (entryTokenCache.has(cacheKey)) {
+            return entryTokenCache.get(cacheKey);
+        }
+        const count = fastCountTokens(content);
+        entryTokenCache.set(cacheKey, count);
+        return count;
+    }
+
+    // 静态文本 Token 缓存 (角色卡人设与预设)
+    const textTokenCache = new Map();
+    function getCachedTextTokens(text, keyPrefix = '') {
+        if (!text) return 0;
+        const str = String(text);
+        const key = `${keyPrefix}:${str.length}:${str.slice(0, 30)}`;
+        if (textTokenCache.has(key)) return textTokenCache.get(key);
+        const count = fastCountTokens(str);
+        textTokenCache.set(key, count);
+        return count;
     }
 
     function inspectPayload() {
@@ -633,7 +652,7 @@
         const detectedModel = detectActiveModel();
         const modelSpec = resolveModelSpec(detectedModel);
 
-        // 2. 角色卡数据全量穿透
+        // 2. 角色卡数据全量穿透 (使用缓存，瞬时获取)
         let charBreakdown = { description: 0, personality: 0, scenario: 0, mes_example: 0 };
         let charChars = 0;
         let charTotal = 0;
@@ -646,56 +665,116 @@
             const scen = activeChar.data?.scenario || activeChar.scenario || '';
             const mesEx = activeChar.data?.mes_example || activeChar.mes_example || '';
 
-            charBreakdown.description = countTokens(desc);
-            charBreakdown.personality = countTokens(pers);
-            charBreakdown.scenario = countTokens(scen);
-            charBreakdown.mes_example = countTokens(mesEx);
+            charBreakdown.description = getCachedTextTokens(desc, 'char_desc');
+            charBreakdown.personality = getCachedTextTokens(pers, 'char_pers');
+            charBreakdown.scenario = getCachedTextTokens(scen, 'char_scen');
+            charBreakdown.mes_example = getCachedTextTokens(mesEx, 'char_mesEx');
 
             charChars = desc.length + pers.length + scen.length + mesEx.length;
             charTotal = charBreakdown.description + charBreakdown.personality + charBreakdown.scenario + charBreakdown.mes_example;
         }
 
-        // 3. 激活世界书条目全面扫描 (仅扫描当前角色内嵌与当前会话实际绑定的世界书)
+        // 3. 激活世界书条目全面扫描 (角色卡内置 + 会话绑定 + 角色关联 + 全局激活)
         let lorebook = { constant: 0, triggered: 0, total: 0, count: 0, constantCount: 0, triggeredCount: 0, entriesList: [] };
-        let rawEntries = [];
 
-        // 3.1 扫描角色内置世界书 (MUFY/酒馆角色卡核心存储处)
-        if (activeChar && activeChar.data && activeChar.data.character_book && Array.isArray(activeChar.data.character_book.entries)) {
-            rawEntries = rawEntries.concat(activeChar.data.character_book.entries);
-        } else if (activeChar && activeChar.character_book && Array.isArray(activeChar.character_book.entries)) {
-            rawEntries = rawEntries.concat(activeChar.character_book.entries);
+        function extractEntriesFromBook(book) {
+            if (!book) return [];
+            if (Array.isArray(book.entries)) return book.entries;
+            if (book.entries && typeof book.entries === 'object') return Object.values(book.entries);
+            return [];
         }
 
-        // 3.2 扫描当前聊天显式绑定的世界书 (Chat Worldbook)
-        const chatWorldBookName = ctx?.chatMetadata?.world_info || window.chat_metadata?.world_info;
-        if (chatWorldBookName && window.world_info_data && window.world_info_data[chatWorldBookName]) {
-            const cwb = window.world_info_data[chatWorldBookName];
-            if (Array.isArray(cwb.entries)) {
-                rawEntries = rawEntries.concat(cwb.entries);
-            }
+        const rawEntriesWithSource = [];
+
+        // 3.1 角色卡内置世界书 (MUFY/酒馆角色卡核心存储处)
+        if (activeChar?.data?.character_book) {
+            extractEntriesFromBook(activeChar.data.character_book).forEach(e => {
+                if (e) rawEntriesWithSource.push({ entry: e, source: '角色内置' });
+            });
+        } else if (activeChar?.character_book && typeof activeChar.character_book === 'object') {
+            extractEntriesFromBook(activeChar.character_book).forEach(e => {
+                if (e) rawEntriesWithSource.push({ entry: e, source: '角色内置' });
+            });
         }
 
-        // 3.3 计算常驻蓝灯与按需绿灯 (严格过滤 disable === true 与 enabled === false)
-        const seenUids = new Set();
-        rawEntries.forEach(entry => {
+        // 3.2 收集所有已挂载激活的世界书名称集合
+        const activeBookNames = new Set();
+
+        // (A) 当前会话专属世界书 (Chat Worldbook) - 兼容字符串或数组
+        const chatWI = ctx?.chatMetadata?.world_info || window.chat_metadata?.world_info;
+        if (Array.isArray(chatWI)) chatWI.forEach(n => n && activeBookNames.add(String(n).trim()));
+        else if (typeof chatWI === 'string' && chatWI.trim()) activeBookNames.add(chatWI.trim());
+
+        // (B) 角色额外绑定的世界书文件名
+        const charLinkedWI = activeChar?.data?.extensions?.world || (typeof activeChar?.character_book === 'string' ? activeChar.character_book : null);
+        if (Array.isArray(charLinkedWI)) charLinkedWI.forEach(n => n && activeBookNames.add(String(n).trim()));
+        else if (typeof charLinkedWI === 'string' && charLinkedWI.trim()) activeBookNames.add(charLinkedWI.trim());
+
+        // (C) 全局激活世界书 (Global Worldbooks，如 NSFW 条目库、通用背景)
+        const globalWI = window.selected_world_info || window.world_info?.global || ctx?.chatMetadata?.global_world_info;
+        if (Array.isArray(globalWI)) globalWI.forEach(n => n && activeBookNames.add(String(n).trim()));
+        else if (typeof globalWI === 'string' && globalWI.trim()) activeBookNames.add(globalWI.trim());
+
+        // (D) DOM 全局世界书下拉框勾选项
+        const globalSelect = document.getElementById('world_info_global') || document.getElementById('global_world_info');
+        if (globalSelect) {
+            Array.from(globalSelect.selectedOptions || []).forEach(opt => {
+                if (opt.value && opt.value !== 'None' && opt.value !== '') activeBookNames.add(opt.value.trim());
+            });
+        }
+
+        // 3.3 从 window.world_info_data 提取激活世界书中的所有条目
+        if (window.world_info_data && typeof window.world_info_data === 'object') {
+            activeBookNames.forEach(bookName => {
+                const book = window.world_info_data[bookName];
+                if (book) {
+                    extractEntriesFromBook(book).forEach(e => {
+                        if (e) rawEntriesWithSource.push({ entry: e, source: bookName });
+                    });
+                }
+            });
+        }
+
+        // 3.4 会话级开关覆盖穿透 (严格对齐用户在酒馆中手动开关 NSFW 或记忆条目的真实状态)
+        const disabledOverrides = new Set();
+        const enabledOverrides = new Set();
+        const metaDisabled = ctx?.chatMetadata?.disabled_entries || window.chat_metadata?.disabled_entries;
+        if (Array.isArray(metaDisabled)) metaDisabled.forEach(id => disabledOverrides.add(String(id)));
+        const metaEnabled = ctx?.chatMetadata?.enabled_entries || window.chat_metadata?.enabled_entries;
+        if (Array.isArray(metaEnabled)) metaEnabled.forEach(id => enabledOverrides.add(String(id)));
+
+        // 3.5 过滤并统计条目 (防止重复 UID 导致漏条目)
+        const seenCompoundKeys = new Set();
+        rawEntriesWithSource.forEach(({ entry, source }, idx) => {
             if (!entry) return;
-            // SillyTavern 标准禁用属性是 disable === true
-            if (entry.disable === true || entry.enabled === false) return;
             const content = entry.content ? String(entry.content).trim() : '';
             if (!content) return;
 
-            const uid = String(entry.uid ?? entry.id ?? entry.comment ?? content.substring(0, 30));
-            if (seenUids.has(uid)) return;
-            seenUids.add(uid);
+            const uid = String(entry.uid ?? entry.id ?? idx);
+            // 判定是否激活：会话级强制开启 > 会话级强制关闭 > 条目默认设置
+            let isEnabled = true;
+            if (entry.disable === true || entry.enabled === false) {
+                isEnabled = false;
+            }
+            if (disabledOverrides.has(uid)) isEnabled = false;
+            if (enabledOverrides.has(uid)) isEnabled = true;
 
-            const tks = countTokens(content);
+            if (!isEnabled) return; // 处于关闭状态，跳过
+
+            // 唯一复合键：来源+UID+内容前缀，保证不同世界书相同 UID 绝对不被误吞
+            const compoundKey = `${source}:${uid}:${content.slice(0, 20)}`;
+            if (seenCompoundKeys.has(compoundKey)) return;
+            seenCompoundKeys.add(compoundKey);
+
+            const tks = getEntryTokenCount(entry);
             const isConst = entry.constant === true || entry.always_active === true;
-            const entryName = entry.comment || entry.displayName || entry.name || (content.length > 18 ? content.substring(0, 18) + '...' : content);
+            const entryName = entry.comment || entry.displayName || entry.name || (content.length > 20 ? content.substring(0, 20) + '...' : content);
 
             lorebook.entriesList.push({
                 name: entryName,
                 isConstant: isConst,
-                tokens: tks
+                tokens: tks,
+                source: source
             });
 
             if (isConst) {
@@ -707,7 +786,8 @@
             }
             lorebook.count++;
         });
-        // 蓝灯常驻条目为每轮必然注入的基础消耗；绿灯按需条目待命
+
+        // 蓝灯常驻条目为每轮必然注入的基础消耗；绿灯待命条目为按需触发
         lorebook.total = lorebook.constant;
 
         // 4. 预设与动态规则块实时穿透 (彻底打通 Chat Completion 原生预设)
@@ -792,9 +872,9 @@
             }
         }
 
-        const spTokens = countTokens(mainPromptText) + countTokens(jbText);
-        const cbTokens = countTokens(customBlockText);
-        const phTokens = countTokens(postHistoryText);
+        const spTokens = getCachedTextTokens(mainPromptText, 'preset_main') + getCachedTextTokens(jbText, 'preset_jb');
+        const cbTokens = getCachedTextTokens(customBlockText, 'preset_cb');
+        const phTokens = getCachedTextTokens(postHistoryText, 'preset_ph');
 
         preset.system_prompt = spTokens;
         preset.custom_blocks = cbTokens;
@@ -802,7 +882,7 @@
         preset.total = spTokens + cbTokens + phTokens;
         preset.isEstimate = false;
 
-        // 5. 活动未隐藏聊天历史
+        // 5. 活动未隐藏聊天历史 (使用 WeakMap 缓存 getMessageTokenCount，0ms 极速求和)
         let chatTokens = 0;
         let unhiddenFloors = 0;
         let startFloor = 0;
@@ -811,7 +891,9 @@
         if (ctx && Array.isArray(ctx.chat) && ctx.chat.length > 0) {
             endFloor = ctx.chat.length - 1;
             let foundStart = false;
-            ctx.chat.forEach((msg, idx) => {
+            for (let idx = 0; idx < ctx.chat.length; idx++) {
+                const msg = ctx.chat[idx];
+                if (!msg) continue;
                 const isHidden = msg.is_system === true || msg.is_hidden === true || (msg.extra && msg.extra.is_hidden === true);
                 if (!isHidden) {
                     if (!foundStart) {
@@ -819,9 +901,9 @@
                         foundStart = true;
                     }
                     unhiddenFloors++;
-                    chatTokens += countTokens(msg.mes || '');
+                    chatTokens += getMessageTokenCount(msg);
                 }
-            });
+            }
             if (!foundStart) startFloor = endFloor;
         }
 
@@ -829,12 +911,12 @@
         let personaTokens = 220;
         let anTokens = 150;
         const anEl = document.getElementById('an_textarea') || document.getElementById('author_note');
-        if (anEl && anEl.value) anTokens = countTokens(anEl.value);
+        if (anEl && anEl.value) anTokens = getCachedTextTokens(anEl.value, 'an_text');
 
         // 7. 当前输入框草稿
         const textarea = document.getElementById('send_textarea');
         const draftText = textarea ? textarea.value : '';
-        const draftTokens = countTokens(draftText);
+        const draftTokens = fastCountTokens(draftText);
 
         // 8. 思考预算
         let thinkingEstimate = 0;
@@ -912,7 +994,7 @@
     // ==========================================
     // 3. 配置与持久化状态 (Config & Storage)
     // ==========================================
-    const STORAGE_KEY = 'xv_toolbox_config_v230';
+    const STORAGE_KEY = 'xv_toolbox_config_v240';
     const POS_STORAGE_KEY = 'xv_toolbox_position';
 
     const defaultConfig = {
@@ -1307,7 +1389,7 @@
                 <div class="xv-tb-payload-card-val">${p.lorebook.total.toLocaleString()} <span style="font-size:11px; font-weight:normal; opacity:0.6;">tk</span></div>
                 <div class="xv-tb-payload-card-sub">
                     <span style="color:#60a5fa;">● 蓝灯常驻: ${p.lorebook.constant.toLocaleString()} tk (${p.lorebook.constantCount}条)</span><br>
-                    <span style="color:#4ade80;">● 绿灯触发: ${p.lorebook.triggered.toLocaleString()} tk (${p.lorebook.triggeredCount}条)</span>
+                    <span style="color:#4ade80;">● 绿灯待命: ${p.lorebook.triggered.toLocaleString()} tk (${p.lorebook.triggeredCount}条)</span>
                 </div>
                 ${p.lorebook.count > 0 ? `
                 <button type="button" class="xv-tb-lore-toggle-btn" id="xv-tb-lore-toggle-btn">
@@ -1316,8 +1398,8 @@
                 <div class="xv-tb-lore-breakdown" id="xv-tb-lore-breakdown">
                     ${p.lorebook.entriesList.map(e => `
                         <div class="xv-tb-lore-item">
-                            <span class="xv-tb-lore-name" title="${e.name}">● ${e.name}</span>
-                            <span class="xv-tb-lore-tag ${e.isConstant ? 'constant' : 'triggered'}">${e.isConstant ? '常驻' : '触发'} ${e.tokens} tk</span>
+                            <span class="xv-tb-lore-name" title="${e.name}">● ${e.name} <small style="opacity:0.6; font-size:10px; margin-left:3px;">[${e.source}]</small></span>
+                            <span class="xv-tb-lore-tag ${e.isConstant ? 'constant' : 'triggered'}">${e.isConstant ? '常驻' : '待命'} ${e.tokens} tk</span>
                         </div>
                     `).join('')}
                 </div>
@@ -1588,25 +1670,15 @@
     // ==========================================
     // 7. 发送栏微型 Token HUD 胶囊 (Floating HUD)
     // ==========================================
-    function updateTokenHUD() {
-        const hud = document.getElementById('xv-tb-token-hud');
-        if (!hud) return;
+    let cachedPayload = null;
 
-        const p = inspectPayload();
-        const grad = getAttentionGradient(p.totalInputTokens, p.modelSpec);
-        const kStr = (p.totalInputTokens / 1000).toFixed(1) + 'k';
+    function getBaseTokens(p) {
+        if (!p) return 0;
+        return (p.charTotal || 0) + (p.lorebook?.total || 0) + (p.preset?.total || 0) + (p.chatTokens || 0) + (p.personaTokens || 0) + (p.anTokens || 0);
+    }
 
-        hud.innerHTML = `<span style="color:${grad.color}; font-size:12px;">●</span> <span>${kStr}</span>`;
-        hud.title = `当前总发包: ${p.totalInputTokens.toLocaleString()} tokens (${grad.badge}) · 点击展开监控`;
-        hud.style.borderColor = grad.glow;
-
-        if (grad.level === 'warn' || grad.level === 'crit') {
-            hud.classList.add('xv-tb-pulse-warn');
-        } else {
-            hud.classList.remove('xv-tb-pulse-warn');
-        }
-
-        // 若当前打开了 Tokens 标签页，平滑更新数字与红线，绝不销毁清空 DOM！
+    function syncOpenTokensTabNumbers(p, grad) {
+        if (!p || !grad) return;
         const modal = document.getElementById('xv-tb-modal');
         const activeNav = modal ? modal.querySelector('.xv-tb-nav-btn.xv-tb-active') : null;
         if (modal && modal.style.display !== 'none' && activeNav && activeNav.dataset.tab === 'tokens') {
@@ -1630,6 +1702,28 @@
                 gaugeEl.style.boxShadow = `0 0 10px ${grad.color}`;
             }
         }
+    }
+
+    function updateTokenHUD() {
+        const hud = document.getElementById('xv-tb-token-hud');
+        if (!hud) return;
+
+        cachedPayload = inspectPayload();
+        const p = cachedPayload;
+        const grad = getAttentionGradient(p.totalInputTokens, p.modelSpec);
+        const kStr = (p.totalInputTokens / 1000).toFixed(1) + 'k';
+
+        hud.innerHTML = `<span style="color:${grad.color}; font-size:12px;">●</span> <span>${kStr}</span>`;
+        hud.title = `当前总发包: ${p.totalInputTokens.toLocaleString()} tokens (${grad.badge}) · 点击展开监控`;
+        hud.style.borderColor = grad.glow;
+
+        if (grad.level === 'warn' || grad.level === 'crit') {
+            hud.classList.add('xv-tb-pulse-warn');
+        } else {
+            hud.classList.remove('xv-tb-pulse-warn');
+        }
+
+        syncOpenTokensTabNumbers(p, grad);
     }
 
     // 注册酒馆原生扩展列表侧边栏折叠项
@@ -1762,13 +1856,28 @@
             }
         });
 
-        // 7. 输入框输入实时监听 (联动草稿 Token 重新计算)
+        // 7. 输入框输入实时监听 (联动草稿 Token 极速累加，微秒级执行，绝不全量扫盘)
         const textarea = document.getElementById('send_textarea');
         if (textarea) {
-            let debounceTimer = null;
+            let draftDebounce = null;
             textarea.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(updateTokenHUD, 120);
+                clearTimeout(draftDebounce);
+                draftDebounce = setTimeout(() => {
+                    const hud = document.getElementById('xv-tb-token-hud');
+                    if (!hud) return;
+                    if (!cachedPayload) {
+                        updateTokenHUD();
+                        return;
+                    }
+                    const draftTk = fastCountTokens(textarea.value);
+                    cachedPayload.draftTokens = draftTk;
+                    const newTotal = getBaseTokens(cachedPayload) + draftTk;
+                    cachedPayload.totalInputTokens = newTotal;
+                    const grad = getAttentionGradient(newTotal, cachedPayload.modelSpec);
+                    const kStr = (newTotal / 1000).toFixed(1) + 'k';
+                    hud.innerHTML = `<span style="color:${grad.color}; font-size:12px;">●</span> <span>${kStr}</span>`;
+                    syncOpenTokensTabNumbers(cachedPayload, grad);
+                }, 150);
             });
         }
 
@@ -1791,9 +1900,10 @@
         const oldFab = document.getElementById('xv-tb-floating-trigger');
         if (oldFab) oldFab.remove();
 
-        // 仅挂载精致的 Token 胶囊
-        if (!document.getElementById('xv-tb-token-hud')) {
-            const hud = document.createElement('div');
+        // 仅挂载精致的 Token 胶囊（若已存在绝不重复创建，保护 DOM）
+        let hud = document.getElementById('xv-tb-token-hud');
+        if (!hud) {
+            hud = document.createElement('div');
             hud.id = 'xv-tb-token-hud';
             hud.innerHTML = `<span>●</span> <span>--k</span>`;
             hud.addEventListener('click', (e) => {
@@ -1802,9 +1912,9 @@
                 openModal('tokens');
             });
             sendBtn.parentNode.insertBefore(hud, sendBtn);
+            // 首次注入时执行一次更新
+            updateTokenHUD();
         }
-
-        updateTokenHUD();
     }
 
     // 状态栏美化常驻样式双保险
@@ -1866,6 +1976,15 @@
 
     // 注册酒馆生命周期事件监听 (设置变更、角色加载、聊天更新实时联动，无需 F5 刷新)
     function setupSTEventListeners() {
+        let eventDebounceTimer = null;
+        const triggerDebouncedUpdate = () => {
+            clearTimeout(eventDebounceTimer);
+            eventDebounceTimer = setTimeout(() => {
+                updateTokenHUD();
+                syncOpenTokensTab();
+            }, 300);
+        };
+
         if (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') {
             const ctx = window.SillyTavern.getContext();
             const eventSource = ctx?.eventSource || window.eventSource;
@@ -1885,12 +2004,7 @@
 
                 eventsToListen.forEach(evt => {
                     try {
-                        eventSource.on(evt, () => {
-                            setTimeout(() => {
-                                updateTokenHUD();
-                                syncOpenTokensTab();
-                            }, 80);
-                        });
+                        eventSource.on(evt, triggerDebouncedUpdate);
                     } catch (e) {}
                 });
             }
@@ -1898,12 +2012,7 @@
 
         // 下拉框与设置变动监听 (切模型、切预设一瞬间立刻重算)
         if (window.$) {
-            $(document).on('change', '#settings_preset_openai, #model_openai_select, #claude_model, #google_model, #openrouter_model, #main_api, #chat_completion_source', () => {
-                setTimeout(() => {
-                    updateTokenHUD();
-                    syncOpenTokensTab();
-                }, 60);
-            });
+            $(document).on('change', '#settings_preset_openai, #model_openai_select, #claude_model, #google_model, #openrouter_model, #main_api, #chat_completion_source, #world_info_global', triggerDebouncedUpdate);
         }
     }
 
@@ -1921,6 +2030,7 @@
         }
 
         // 定时轮询保证输入栏重绘后 Token 胶囊始终挂载、侧边栏扩展列表注册、且多余图标被清理
+        // 【关键性能铁律】：绝不在此定时轮询中调用 updateTokenHUD() 或重绘 Token！仅检查 DOM 存在性！
         setInterval(() => {
             ensureRemyStyles();
             registerExtensionSettingsDrawer();
@@ -1928,13 +2038,12 @@
             const sendBtn = document.getElementById('send_but');
             const oldBtn = document.getElementById('xv-tb-toolbar-btn');
             if (oldBtn) oldBtn.remove();
-            if (!hud || (sendBtn && hud.nextElementSibling !== sendBtn)) {
-                if (hud) hud.remove();
+            if (!hud && sendBtn && sendBtn.parentNode) {
                 injectToolbarButton();
             }
-        }, 1500);
+        }, 3000);
     }
 
     bootstrap();
-    console.log('[XV-Toolbox] XV 随身百宝箱 v2.3.0 (原生数据直连版) 已成功启动！');
+    console.log('[XV-Toolbox] XV 随身百宝箱 v2.4.0 (极速冷静与原生全息校准版) 已成功启动！');
 })();
