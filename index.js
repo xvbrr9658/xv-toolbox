@@ -275,82 +275,27 @@
     // 1. 模型规格数据库与动态检测引擎 (Model Specs & Dynamic Detector)
     // ==========================================
     const BUILTIN_MODEL_SPECS = {
-        "gemini-3.1-pro-low": {
-            displayName: "Gemini 3.1 Pro (Low)",
-            provider: "Google / Antigravity ACC",
-            maxContext: 2000000,
-            reasoningEffort: "low",
-            thinkingWarn: false,
-            rpComfort: 15000,
-            rpWarn: 28000,
-            rpCrit: 40000,
-            desc: "Google 旗舰深度推理模型 · 低思考预算档位，回复神速，额度消耗克制。"
-        },
-        "gemini-3.1-pro-high": {
-            displayName: "Gemini 3.1 Pro (High)",
-            provider: "Google / Antigravity ACC",
-            maxContext: 2000000,
-            reasoningEffort: "high",
-            thinkingWarn: true,
-            rpComfort: 12000,
-            rpWarn: 22000,
-            rpCrit: 35000,
-            desc: "Google 旗舰深度推理模型 · 极高思考预算档位 ⚠️ 包含大量隐式链式思考，额度消耗较快。"
-        },
-        "gemini-3.1-pro": {
-            displayName: "Gemini 3.1 Pro",
-            provider: "Google / Antigravity ACC",
-            maxContext: 2000000,
-            reasoningEffort: "standard",
-            thinkingWarn: false,
-            rpComfort: 15000,
-            rpWarn: 28000,
-            rpCrit: 40000,
-            desc: "Google 旗舰深度推理模型 · 兼顾顶级文学逻辑与推理。"
-        },
-        "gemini-3.8-flash": {
-            displayName: "Gemini 3.8 Flash",
-            provider: "Google / Antigravity ACC",
+        "claude-sonnet-4-6": {
+            displayName: "Claude Sonnet 4.6",
+            provider: "Anthropic",
             maxContext: 1000000,
             reasoningEffort: "none",
             thinkingWarn: false,
-            rpComfort: 18000,
-            rpWarn: 35000,
-            rpCrit: 45000,
-            desc: "Google 极速主力工作模型 · 百万上下文，超高性价比与低延迟响应。"
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Anthropic 4.6 旗舰文学模型 · 百万超大窗口，长程微表情与深层心理博弈顶级。"
         },
-        "gemini-2.5-pro": {
-            displayName: "Gemini 2.5 Pro",
-            provider: "Google / Antigravity ACC",
-            maxContext: 2000000,
-            reasoningEffort: "standard",
-            thinkingWarn: false,
-            rpComfort: 15000,
-            rpWarn: 28000,
-            rpCrit: 40000,
-            desc: "Google 2.5 旗舰模型 · 200万超大窗口。"
-        },
-        "gemini-2.5-flash": {
-            displayName: "Gemini 2.5 Flash",
-            provider: "Google / Antigravity ACC",
+        "claude-sonnet-4": {
+            displayName: "Claude Sonnet 4",
+            provider: "Anthropic",
             maxContext: 1000000,
             reasoningEffort: "none",
             thinkingWarn: false,
-            rpComfort: 18000,
-            rpWarn: 35000,
-            rpCrit: 45000,
-            desc: "Google 2.5 闪电模型 · 百万上下文，轻快敏捷。"
-        },
-        "gemini-2.0-flash": {
-            displayName: "Gemini 2.0 Flash",
-            provider: "Google",
-            maxContext: 1000000,
-            reasoningEffort: "none",
-            thinkingWarn: false,
-            rpComfort: 18000,
-            rpWarn: 35000,
-            rpCrit: 45000,
-            desc: "Google 2.0 极速多模态模型 · 100万超大窗口。"
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Anthropic 4 代旗舰文学模型 · 百万超大窗口。"
         },
         "claude-3-7-sonnet": {
             displayName: "Claude 3.7 Sonnet",
@@ -358,21 +303,21 @@
             maxContext: 200000,
             reasoningEffort: "standard",
             thinkingWarn: false,
-            rpComfort: 18000,
-            rpWarn: 28000,
-            rpCrit: 42000,
+            rpComfort: 50000,
+            rpWarn: 80000,
+            rpCrit: 100000,
             desc: "Anthropic 顶级双模推理旗舰 · 200k 上下文，微表情与深度心理博弈顶级。"
         },
         "claude-3-5-sonnet-20241022": {
-            displayName: "Claude 3.5 Sonnet (New)",
+            displayName: "Claude 3.5 Sonnet",
             provider: "Anthropic",
             maxContext: 200000,
             reasoningEffort: "none",
             thinkingWarn: false,
-            rpComfort: 15000,
-            rpWarn: 25000,
-            rpCrit: 38000,
-            desc: "Anthropic 顶级文本文风模型 · 200k 上下文，微表情与心理博弈顶级，需严格控流。"
+            rpComfort: 50000,
+            rpWarn: 80000,
+            rpCrit: 100000,
+            desc: "Anthropic 顶级文本文风模型 · 200k 上下文，微表情与心理博弈顶级。"
         },
         "claude-3-5-sonnet": {
             displayName: "Claude 3.5 Sonnet",
@@ -380,9 +325,9 @@
             maxContext: 200000,
             reasoningEffort: "none",
             thinkingWarn: false,
-            rpComfort: 15000,
-            rpWarn: 25000,
-            rpCrit: 38000,
+            rpComfort: 50000,
+            rpWarn: 80000,
+            rpCrit: 100000,
             desc: "Anthropic 顶级文本文风模型 · 200k 上下文。"
         },
         "claude-3-5-haiku": {
@@ -391,9 +336,9 @@
             maxContext: 200000,
             reasoningEffort: "none",
             thinkingWarn: false,
-            rpComfort: 18000,
-            rpWarn: 32000,
-            rpCrit: 45000,
+            rpComfort: 45000,
+            rpWarn: 75000,
+            rpCrit: 95000,
             desc: "Anthropic 极速轻量模型 · 200k 上下文，响应极快。"
         },
         "claude-3-opus": {
@@ -402,10 +347,87 @@
             maxContext: 200000,
             reasoningEffort: "none",
             thinkingWarn: false,
-            rpComfort: 12000,
-            rpWarn: 20000,
-            rpCrit: 32000,
-            desc: "Anthropic 重量级推理模型 · 建议常驻在安全区内使用。"
+            rpComfort: 40000,
+            rpWarn: 65000,
+            rpCrit: 85000,
+            desc: "Anthropic 重量级文学模型 · 建议常驻在安全区内使用。"
+        },
+        "gemini-3.1-pro-low": {
+            displayName: "Gemini 3.1 Pro (Low)",
+            provider: "Google / Antigravity ACC",
+            maxContext: 2000000,
+            reasoningEffort: "low",
+            thinkingWarn: false,
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Google 旗舰深度推理模型 · 低思考预算档位，回复神速，额度消耗克制。"
+        },
+        "gemini-3.1-pro-high": {
+            displayName: "Gemini 3.1 Pro (High)",
+            provider: "Google / Antigravity ACC",
+            maxContext: 2000000,
+            reasoningEffort: "high",
+            thinkingWarn: true,
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Google 旗舰深度推理模型 · 极高思考预算档位 ⚠️ 包含大量隐式链式思考。"
+        },
+        "gemini-3.1-pro": {
+            displayName: "Gemini 3.1 Pro",
+            provider: "Google / Antigravity ACC",
+            maxContext: 2000000,
+            reasoningEffort: "standard",
+            thinkingWarn: false,
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Google 旗舰深度推理模型 · 兼顾顶级文学逻辑与两百万超大窗口。"
+        },
+        "gemini-3.8-flash": {
+            displayName: "Gemini 3.8 Flash",
+            provider: "Google / Antigravity ACC",
+            maxContext: 1000000,
+            reasoningEffort: "none",
+            thinkingWarn: false,
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Google 极速主力工作模型 · 百万上下文，超高性价比与低延迟响应。"
+        },
+        "gemini-2.5-pro": {
+            displayName: "Gemini 2.5 Pro",
+            provider: "Google / Antigravity ACC",
+            maxContext: 2000000,
+            reasoningEffort: "standard",
+            thinkingWarn: false,
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Google 2.5 旗舰模型 · 200万超大窗口。"
+        },
+        "gemini-2.5-flash": {
+            displayName: "Gemini 2.5 Flash",
+            provider: "Google / Antigravity ACC",
+            maxContext: 1000000,
+            reasoningEffort: "none",
+            thinkingWarn: false,
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Google 2.5 闪电模型 · 百万上下文，轻快敏捷。"
+        },
+        "gemini-2.0-flash": {
+            displayName: "Gemini 2.0 Flash",
+            provider: "Google",
+            maxContext: 1000000,
+            reasoningEffort: "none",
+            thinkingWarn: false,
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
+            desc: "Google 2.0 极速多模态模型 · 100万超大窗口。"
         },
         "gpt-4o": {
             displayName: "GPT-4o",
@@ -413,9 +435,9 @@
             maxContext: 128000,
             reasoningEffort: "none",
             thinkingWarn: false,
-            rpComfort: 14000,
-            rpWarn: 25000,
-            rpCrit: 35000,
+            rpComfort: 40000,
+            rpWarn: 60000,
+            rpCrit: 80000,
             desc: "OpenAI 多模态旗舰模型 · 128k 上下文。"
         },
         "deepseek-reasoner": {
@@ -424,9 +446,9 @@
             maxContext: 64000,
             reasoningEffort: "high",
             thinkingWarn: true,
-            rpComfort: 14000,
-            rpWarn: 25000,
-            rpCrit: 35000,
+            rpComfort: 35000,
+            rpWarn: 48000,
+            rpCrit: 60000,
             desc: "DeepSeek 深度强化推理模型 · 具备强链式思考能力。"
         },
         "deepseek-chat": {
@@ -435,9 +457,9 @@
             maxContext: 64000,
             reasoningEffort: "none",
             thinkingWarn: false,
-            rpComfort: 16000,
-            rpWarn: 30000,
-            rpCrit: 42000,
+            rpComfort: 40000,
+            rpWarn: 52000,
+            rpCrit: 62000,
             desc: "DeepSeek 综合大模型 · 64k 上下文，文笔通顺流畅。"
         }
     };
@@ -515,7 +537,7 @@
             if (ctx.model) return ctx.model;
         }
 
-        // 5. 兜底回退：若当前界面未识别，才检查历史消息底层打标
+        // 5. 兜底回退：若当前界面未识别，检查历史消息底层打标
         if (ctx && Array.isArray(ctx.chat) && ctx.chat.length > 0) {
             for (let i = ctx.chat.length - 1; i >= 0; i--) {
                 const msg = ctx.chat[i];
@@ -528,31 +550,40 @@
             }
         }
 
-        return 'Gemini 3.1 Pro (Low)';
+        return 'claude-sonnet-4-6';
     }
 
     function resolveModelSpec(rawModelId) {
-        if (!rawModelId) rawModelId = 'gemini-3.1-pro-low';
+        if (!rawModelId) rawModelId = 'claude-sonnet-4-6';
         const id = String(rawModelId).toLowerCase().trim();
         for (const key in BUILTIN_MODEL_SPECS) {
             if (id === key.toLowerCase()) return BUILTIN_MODEL_SPECS[key];
         }
 
-        // Claude 家族智能匹配
-        if (id.includes('3.7') && id.includes('sonnet')) return BUILTIN_MODEL_SPECS["claude-3-7-sonnet"];
-        if (id.includes('sonnet')) return BUILTIN_MODEL_SPECS["claude-3-5-sonnet-20241022"];
+        // Claude 家族智能匹配（严格按版本先后优先匹配，绝对禁止将 4.6 降级为 3.5）
+        if (id.includes('4-6') || id.includes('4.6') || (id.includes('sonnet') && (id.includes('4') || id.includes('v4')))) {
+            return BUILTIN_MODEL_SPECS["claude-sonnet-4-6"];
+        }
+        if (id.includes('3.7') || id.includes('3-7')) return BUILTIN_MODEL_SPECS["claude-3-7-sonnet"];
+        if (id.includes('3.5') || id.includes('3-5') || id.includes('20241022')) return BUILTIN_MODEL_SPECS["claude-3-5-sonnet-20241022"];
         if (id.includes('opus')) return BUILTIN_MODEL_SPECS["claude-3-opus"];
         if (id.includes('haiku')) return BUILTIN_MODEL_SPECS["claude-3-5-haiku"];
-        if (id.includes('claude')) return BUILTIN_MODEL_SPECS["claude-3-5-sonnet"];
+        if (id.includes('claude')) {
+            return Object.assign({}, BUILTIN_MODEL_SPECS["claude-sonnet-4-6"], {
+                displayName: rawModelId,
+                desc: `当前动态侦测模型: ${rawModelId}`
+            });
+        }
 
         // Gemini 家族智能匹配
         if (id.includes('3.1') && id.includes('pro') && id.includes('low')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro-low"];
         if (id.includes('3.1') && id.includes('pro') && id.includes('high')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro-high"];
-        if (id.includes('3.1') && id.includes('pro')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro-low"];
+        if (id.includes('3.1') && id.includes('pro')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro"];
         if (id.includes('3.8') && id.includes('flash')) return BUILTIN_MODEL_SPECS["gemini-3.8-flash"];
         if (id.includes('2.5') && id.includes('pro')) return BUILTIN_MODEL_SPECS["gemini-2.5-pro"];
         if (id.includes('2.5') && id.includes('flash')) return BUILTIN_MODEL_SPECS["gemini-2.5-flash"];
         if (id.includes('2.0') && id.includes('flash')) return BUILTIN_MODEL_SPECS["gemini-2.0-flash"];
+        if (id.includes('gemini')) return BUILTIN_MODEL_SPECS["gemini-3.1-pro"];
 
         // DeepSeek 家族智能匹配
         if (id.includes('deepseek') && (id.includes('r1') || id.includes('reasoner'))) return BUILTIN_MODEL_SPECS["deepseek-reasoner"];
@@ -561,18 +592,16 @@
         // OpenAI 家族智能匹配
         if (id.includes('4o')) return BUILTIN_MODEL_SPECS["gpt-4o"];
 
-        // 动态自适应未知/新模型
-        const isClaude = id.includes('claude');
-        const isGemini = id.includes('gemini');
+        // 动态自适应未知/新模型 (默认赋予现代 100万 上下文与宽松理智阈值)
         return {
             displayName: rawModelId,
-            provider: isClaude ? "Anthropic" : (isGemini ? "Google" : "Detected API"),
-            maxContext: isClaude ? 200000 : (isGemini ? 1000000 : 128000),
+            provider: (id.includes('claude') || id.includes('anthropic')) ? "Anthropic" : ((id.includes('gemini') || id.includes('google')) ? "Google" : "API 模型"),
+            maxContext: 1000000,
             reasoningEffort: id.includes('high') ? 'high' : (id.includes('low') ? 'low' : 'standard'),
             thinkingWarn: id.includes('high') || id.includes('reasoner'),
-            rpComfort: 15000,
-            rpWarn: 25000,
-            rpCrit: 40000,
+            rpComfort: 60000,
+            rpWarn: 90000,
+            rpCrit: 120000,
             desc: `当前动态侦测模型: ${rawModelId}`
         };
     }
@@ -652,8 +681,8 @@
         const detectedModel = detectActiveModel();
         const modelSpec = resolveModelSpec(detectedModel);
 
-        // 2. 角色卡数据全量穿透 (使用缓存，瞬时获取)
-        let charBreakdown = { description: 0, personality: 0, scenario: 0, mes_example: 0 };
+        // 2. 角色卡数据全量穿透与原生 Token 实时对齐
+        let charBreakdown = { description: 0, personality: 0, scenario: 0, mes_example: 0, system_prompt: 0, first_mes: 0 };
         let charChars = 0;
         let charTotal = 0;
         let activeChar = null;
@@ -664,14 +693,49 @@
             const pers = activeChar.data?.personality || activeChar.personality || '';
             const scen = activeChar.data?.scenario || activeChar.scenario || '';
             const mesEx = activeChar.data?.mes_example || activeChar.mes_example || '';
+            const sysP = activeChar.data?.system_prompt || activeChar.system_prompt || '';
+            const firstMes = activeChar.data?.first_mes || activeChar.first_mes || '';
 
             charBreakdown.description = getCachedTextTokens(desc, 'char_desc');
             charBreakdown.personality = getCachedTextTokens(pers, 'char_pers');
             charBreakdown.scenario = getCachedTextTokens(scen, 'char_scen');
             charBreakdown.mes_example = getCachedTextTokens(mesEx, 'char_mesEx');
+            charBreakdown.system_prompt = getCachedTextTokens(sysP, 'char_sysP');
+            charBreakdown.first_mes = getCachedTextTokens(firstMes, 'char_firstMes');
 
-            charChars = desc.length + pers.length + scen.length + mesEx.length;
-            charTotal = charBreakdown.description + charBreakdown.personality + charBreakdown.scenario + charBreakdown.mes_example;
+            charChars = desc.length + pers.length + scen.length + mesEx.length + sysP.length + firstMes.length;
+
+            // (A) 优先：直接穿透 SillyTavern 原生已计算的角色卡 Token 数 (如 5018 Token)
+            let nativeCharTokens = 0;
+            if (typeof activeChar.token_count === 'number' && activeChar.token_count > 0) {
+                nativeCharTokens = activeChar.token_count;
+            } else if (typeof activeChar.data?.token_count === 'number' && activeChar.data.token_count > 0) {
+                nativeCharTokens = activeChar.data.token_count;
+            } else if (typeof activeChar.tokens === 'number' && activeChar.tokens > 0) {
+                nativeCharTokens = activeChar.tokens;
+            }
+
+            // (B) 穿透 DOM 界面角色卡 Token 数标签 (如 "5018 Token 数 (5012 永久的)")
+            if (!nativeCharTokens) {
+                const charTkEls = document.querySelectorAll('#result_info, #character_token_count, .character_token_count, #form_character .token_count, #rm_character_wrapper, #character_details_tokens');
+                for (const el of charTkEls) {
+                    const text = el.innerText || el.textContent || '';
+                    const m = text.match(/(\d+)\s*(?:Token\s*数|tokens?)/i);
+                    if (m && m[1]) {
+                        const parsed = parseInt(m[1], 10);
+                        if (parsed > 0) {
+                            nativeCharTokens = parsed;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (nativeCharTokens > 0) {
+                charTotal = nativeCharTokens;
+            } else {
+                charTotal = charBreakdown.description + charBreakdown.personality + charBreakdown.scenario + charBreakdown.mes_example + charBreakdown.system_prompt + charBreakdown.first_mes;
+            }
         }
 
         // 3. 激活世界书条目全面扫描 (角色卡内置 + 会话绑定 + 角色关联 + 全局激活)
@@ -700,7 +764,7 @@
         // 3.2 收集所有已挂载激活的世界书名称集合
         const activeBookNames = new Set();
 
-        // (A) 当前会话专属世界书 (Chat Worldbook) - 兼容字符串或数组
+        // (A) 当前会话专属世界书 (Chat Worldbook)
         const chatWI = ctx?.chatMetadata?.world_info || window.chat_metadata?.world_info;
         if (Array.isArray(chatWI)) chatWI.forEach(n => n && activeBookNames.add(String(n).trim()));
         else if (typeof chatWI === 'string' && chatWI.trim()) activeBookNames.add(chatWI.trim());
@@ -710,7 +774,7 @@
         if (Array.isArray(charLinkedWI)) charLinkedWI.forEach(n => n && activeBookNames.add(String(n).trim()));
         else if (typeof charLinkedWI === 'string' && charLinkedWI.trim()) activeBookNames.add(charLinkedWI.trim());
 
-        // (C) 全局激活世界书 (Global Worldbooks，如 NSFW 条目库、通用背景)
+        // (C) 全局激活世界书 (Global Worldbooks)
         const globalWI = window.selected_world_info || window.world_info?.global || ctx?.chatMetadata?.global_world_info;
         if (Array.isArray(globalWI)) globalWI.forEach(n => n && activeBookNames.add(String(n).trim()));
         else if (typeof globalWI === 'string' && globalWI.trim()) activeBookNames.add(globalWI.trim());
@@ -735,7 +799,7 @@
             });
         }
 
-        // 3.4 会话级开关覆盖穿透 (严格对齐用户在酒馆中手动开关 NSFW 或记忆条目的真实状态)
+        // 3.4 会话级开关覆盖穿透
         const disabledOverrides = new Set();
         const enabledOverrides = new Set();
         const metaDisabled = ctx?.chatMetadata?.disabled_entries || window.chat_metadata?.disabled_entries;
@@ -743,26 +807,30 @@
         const metaEnabled = ctx?.chatMetadata?.enabled_entries || window.chat_metadata?.enabled_entries;
         if (Array.isArray(metaEnabled)) metaEnabled.forEach(id => enabledOverrides.add(String(id)));
 
-        // 3.5 过滤并统计条目 (防止重复 UID 导致漏条目)
+        // 3.5 过滤并统计条目 (防 UID 跨书串扰)
         const seenCompoundKeys = new Set();
         rawEntriesWithSource.forEach(({ entry, source }, idx) => {
             if (!entry) return;
             const content = entry.content ? String(entry.content).trim() : '';
             if (!content) return;
 
-            const uid = String(entry.uid ?? entry.id ?? idx);
-            // 判定是否激活：会话级强制开启 > 会话级强制关闭 > 条目默认设置
+            const entryUid = entry.uid !== undefined ? String(entry.uid) : (entry.id !== undefined ? String(entry.id) : String(idx));
+            const entryComment = entry.comment ? String(entry.comment).trim() : '';
+
             let isEnabled = true;
             if (entry.disable === true || entry.enabled === false) {
                 isEnabled = false;
             }
-            if (disabledOverrides.has(uid)) isEnabled = false;
-            if (enabledOverrides.has(uid)) isEnabled = true;
+            if (disabledOverrides.has(entryUid) || disabledOverrides.has(`${source}_${entryUid}`) || (entryComment && disabledOverrides.has(entryComment))) {
+                isEnabled = false;
+            }
+            if (enabledOverrides.has(entryUid) || enabledOverrides.has(`${source}_${entryUid}`) || (entryComment && enabledOverrides.has(entryComment))) {
+                isEnabled = true;
+            }
 
-            if (!isEnabled) return; // 处于关闭状态，跳过
+            if (!isEnabled) return;
 
-            // 唯一复合键：来源+UID+内容前缀，保证不同世界书相同 UID 绝对不被误吞
-            const compoundKey = `${source}:${uid}:${content.slice(0, 20)}`;
+            const compoundKey = `${source}::${entryUid}::${entryComment || content.slice(0, 15)}`;
             if (seenCompoundKeys.has(compoundKey)) return;
             seenCompoundKeys.add(compoundKey);
 
@@ -787,13 +855,12 @@
             lorebook.count++;
         });
 
-        // 蓝灯常驻条目为每轮必然注入的基础消耗；绿灯待命条目为按需触发
         lorebook.total = lorebook.constant;
 
-        // 4. 预设与动态规则块实时穿透 (彻底打通 Chat Completion 原生预设)
+        // 4. 预设与动态规则块实时穿透 (彻底打通 Chat Completion 原生预设与 Prompt Manager)
         let preset = { system_prompt: 0, custom_blocks: 0, post_history: 0, total: 0, presetName: '当前预设', isEstimate: false };
 
-        const oaiSettings = window.oai_settings;
+        const oaiSettings = window.oai_settings || ctx?.chatCompletionSettings;
         const presetSel = document.getElementById('settings_preset_openai') 
             || document.getElementById('settings_preset') 
             || document.getElementById('chat_completion_preset');
@@ -806,26 +873,99 @@
             preset.presetName = window.selected_preset;
         }
 
-        let mainPromptText = '';
-        let jbText = '';
-        let postHistoryText = '';
-        let customBlockText = '';
+        // 4.1 【最高优先级】：直接穿透 SillyTavern DOM 渲染的原生预设总 Token (如 "预设总Token: 12636")
+        let nativePresetTokens = 0;
+        const pmHeaderSelectors = [
+            '.completion_prompt_manager_header',
+            '#completion_prompt_manager',
+            '.prompt_manager_header',
+            '#prompt_manager',
+            '.range-block'
+        ];
+        for (const sel of pmHeaderSelectors) {
+            const els = document.querySelectorAll(sel);
+            for (const el of els) {
+                const text = el.innerText || el.textContent || '';
+                const m = text.match(/(?:预设总Token|Total Tokens?):\s*(\d+)/i);
+                if (m && m[1]) {
+                    const parsed = parseInt(m[1], 10);
+                    if (parsed > 0) {
+                        nativePresetTokens = parsed;
+                        break;
+                    }
+                }
+            }
+            if (nativePresetTokens > 0) break;
+        }
 
-        // 4.1 穿透 window.openai_settings 与 window.openai_setting_names (Chat Completion 原生内存)
-        if (window.openai_settings && window.openai_setting_names && oaiSettings?.preset_settings_openai) {
+        // 4.2 【第二优先级】：从内存中的 PromptManager 实例直接读取 tokenUsage
+        if (!nativePresetTokens) {
+            const pm = window.promptManager || window.prompt_manager || ctx?.getPresetManager?.();
+            if (pm && typeof pm.tokenUsage === 'number' && pm.tokenUsage > 0) {
+                nativePresetTokens = pm.tokenUsage;
+            } else if (pm?.tokenHandler && typeof pm.tokenHandler.getTotal === 'function') {
+                const tot = pm.tokenHandler.getTotal();
+                if (tot > 0) nativePresetTokens = tot;
+            }
+        }
+
+        // 4.3 【第三优先级】：直接扫描 oaiSettings.prompts 与 prompt_order 计算全量真实预设 Token
+        let spTokens = 0;
+        let cbTokens = 0;
+        let phTokens = 0;
+
+        if (oaiSettings && Array.isArray(oaiSettings.prompts) && oaiSettings.prompts.length > 0) {
+            const enabledPromptIds = new Set();
+            let hasOrder = false;
+
+            if (Array.isArray(oaiSettings.prompt_order)) {
+                const currentChidStr = String(ctx?.characterId ?? '100001');
+                const matchedOrderObj = oaiSettings.prompt_order.find(x => String(x.character_id) === currentChidStr || String(x.character_id) === '100001');
+                const orderList = matchedOrderObj?.order || (oaiSettings.prompt_order[0]?.order ? oaiSettings.prompt_order[0].order : oaiSettings.prompt_order);
+
+                if (Array.isArray(orderList)) {
+                    orderList.forEach(item => {
+                        if (item && item.enabled !== false && item.identifier) {
+                            enabledPromptIds.add(item.identifier);
+                            hasOrder = true;
+                        }
+                    });
+                }
+            }
+
+            oaiSettings.prompts.forEach(p => {
+                if (!p || !p.content) return;
+                if (hasOrder && !enabledPromptIds.has(p.identifier)) return;
+                if (p.enabled === false || p.disable === true) return;
+
+                const tk = getCachedTextTokens(p.content, 'prompt_' + (p.identifier || p.name));
+                const pName = (p.name || p.identifier || '').toLowerCase();
+
+                if (pName === 'main' || pName === 'jailbreak' || pName === 'nsfw' || p.system_prompt === true) {
+                    spTokens += tk;
+                } else if (pName.includes('post_history') || pName.includes('posthistory')) {
+                    phTokens += tk;
+                } else {
+                    cbTokens += tk;
+                }
+            });
+        }
+
+        // 4.4 兼容经典 preset 数据 (window.openai_settings)
+        if (spTokens === 0 && cbTokens === 0 && window.openai_settings && window.openai_setting_names && oaiSettings?.preset_settings_openai) {
             const idx = window.openai_setting_names[oaiSettings.preset_settings_openai];
             if (idx !== undefined && window.openai_settings[idx]) {
                 const pData = window.openai_settings[idx];
-                if (typeof pData.main_prompt === 'string') mainPromptText = pData.main_prompt;
-                if (typeof pData.jailbreak_system_prompt === 'string') jbText = pData.jailbreak_system_prompt;
-                if (typeof pData.jailbreak_prompt === 'string' && !jbText) jbText = pData.jailbreak_prompt;
-                if (typeof pData.post_history_instructions === 'string') postHistoryText = pData.post_history_instructions;
-
+                if (pData.main_prompt) spTokens += getCachedTextTokens(pData.main_prompt, 'legacy_main');
+                if (pData.jailbreak_prompt || pData.jailbreak_system_prompt) {
+                    spTokens += getCachedTextTokens(pData.jailbreak_prompt || pData.jailbreak_system_prompt, 'legacy_jb');
+                }
+                if (pData.post_history_instructions) phTokens += getCachedTextTokens(pData.post_history_instructions, 'legacy_ph');
                 if (Array.isArray(pData.prompts)) {
                     pData.prompts.forEach(p => {
                         if (p && p.enabled !== false && p.disable !== true && p.content) {
                             if (p.name !== 'main' && p.name !== 'jailbreak') {
-                                customBlockText += p.content + '\n';
+                                cbTokens += getCachedTextTokens(p.content, 'legacy_p_' + p.name);
                             }
                         }
                     });
@@ -833,54 +973,26 @@
             }
         }
 
-        // 4.2 穿透 DOM 文本框 (若用户在高级设置面板中实时编辑了文本)
-        const mainPromptEl = document.getElementById('main_prompt') || document.getElementById('system_prompt');
-        const jailbreakEl = document.getElementById('jailbreak_system_prompt') || document.getElementById('jailbreak_prompt') || document.getElementById('nsfw_prompt');
-        const postHistoryEl = document.getElementById('post_history_instructions');
+        const calculatedTotal = spTokens + cbTokens + phTokens;
 
-        if (mainPromptEl && mainPromptEl.value) mainPromptText = mainPromptEl.value;
-        if (jailbreakEl && jailbreakEl.value) jbText = jailbreakEl.value;
-        if (postHistoryEl && postHistoryEl.value) postHistoryText = postHistoryEl.value;
-
-        // 4.3 穿透 oai_settings 配置字段
-        if (!mainPromptText && oaiSettings?.main_prompt) mainPromptText = oaiSettings.main_prompt;
-        if (!jbText && oaiSettings?.jailbreak_system_prompt) jbText = oaiSettings.jailbreak_system_prompt;
-        if (!postHistoryText && oaiSettings?.post_history_instructions) postHistoryText = oaiSettings.post_history_instructions;
-
-        // 4.4 扫描动态勾选框自定义规则块与 Prompt Manager 条目
-        const activeCheckboxes = document.querySelectorAll('#custom_prompts input[type="checkbox"]:checked, .custom_prompt_entry input[type="checkbox"]:checked, .prompt_manager_item input[type="checkbox"]:checked');
-        activeCheckboxes.forEach(cb => {
-            const row = cb.closest('.custom_prompt_entry, .prompt_manager_item') || cb.parentElement;
-            if (row) {
-                const ta = row.querySelector('textarea');
-                if (ta && ta.value) customBlockText += ta.value + '\n';
+        if (nativePresetTokens > 0) {
+            preset.total = nativePresetTokens;
+            if (calculatedTotal > 0) {
+                const ratio = nativePresetTokens / calculatedTotal;
+                preset.system_prompt = Math.round(spTokens * ratio);
+                preset.custom_blocks = Math.round(cbTokens * ratio);
+                preset.post_history = Math.round(phTokens * ratio);
+            } else {
+                preset.system_prompt = nativePresetTokens;
             }
-        });
-
-        // 4.5 穿透 window.power_user (针对老式 TextGen / NovelAI 用户)
-        const pu = window.power_user || (ctx && ctx.power_user);
-        if (pu) {
-            if (!mainPromptText && typeof pu.main_prompt === 'string') mainPromptText = pu.main_prompt;
-            if (!jbText && typeof pu.jailbreak_prompt === 'string') jbText = pu.jailbreak_prompt;
-            if (!postHistoryText && typeof pu.post_history_instructions === 'string') postHistoryText = pu.post_history_instructions;
-            if (Array.isArray(pu.custom_prompts)) {
-                pu.custom_prompts.forEach(cp => {
-                    if (cp && cp.enabled !== false && cp.disable !== true && cp.content) {
-                        customBlockText += cp.content + '\n';
-                    }
-                });
-            }
+            preset.isEstimate = false;
+        } else {
+            preset.system_prompt = spTokens;
+            preset.custom_blocks = cbTokens;
+            preset.post_history = phTokens;
+            preset.total = calculatedTotal;
+            preset.isEstimate = false;
         }
-
-        const spTokens = getCachedTextTokens(mainPromptText, 'preset_main') + getCachedTextTokens(jbText, 'preset_jb');
-        const cbTokens = getCachedTextTokens(customBlockText, 'preset_cb');
-        const phTokens = getCachedTextTokens(postHistoryText, 'preset_ph');
-
-        preset.system_prompt = spTokens;
-        preset.custom_blocks = cbTokens;
-        preset.post_history = phTokens;
-        preset.total = spTokens + cbTokens + phTokens;
-        preset.isEstimate = false;
 
         // 5. 活动未隐藏聊天历史 (使用 WeakMap 缓存 getMessageTokenCount，0ms 极速求和)
         let chatTokens = 0;
@@ -948,9 +1060,9 @@
     }
 
     function getAttentionGradient(totalTokens, spec) {
-        const comfort = spec.rpComfort || 15000;
-        const warn = spec.rpWarn || 25000;
-        const crit = spec.rpCrit || 40000;
+        const comfort = spec.rpComfort || 60000;
+        const warn = spec.rpWarn || 90000;
+        const crit = spec.rpCrit || 120000;
 
         if (totalTokens < comfort) {
             return {
@@ -967,7 +1079,7 @@
                 color: '#facc15',
                 glow: 'rgba(250, 204, 21, 0.25)',
                 badge: '🟡 舒适演义区',
-                desc: '长篇小说标准负载，注意力分布均匀，逻辑连贯丝滑，适合平稳推进。',
+                desc: '长篇小说黄金演义期，长程逻辑丝滑连贯，注意力分布均匀，适合平稳推进。',
                 percent: Math.min(100, Math.round((totalTokens / crit) * 100))
             };
         } else if (totalTokens < crit) {
@@ -976,7 +1088,7 @@
                 color: '#fb923c',
                 glow: 'rgba(251, 146, 60, 0.25)',
                 badge: '🟠 疲劳警戒区',
-                desc: '⚠️ 注意力开始稀释，容易偶发性遗忘前文细节与重复颜文字，建议点击归档！',
+                desc: '⚠️ 历史已累积多轮，注意力轻度分散，建议在方便时使用「阶段记忆归档」轻装上阵！',
                 percent: Math.min(100, Math.round((totalTokens / crit) * 100))
             };
         } else {
@@ -984,8 +1096,8 @@
                 level: 'crit',
                 color: '#f87171',
                 glow: 'rgba(248, 113, 113, 0.35)',
-                badge: '🔴 降智熔断红线',
-                desc: '🚫 严重危险！注意力已严重溢出，极易出现幻觉并抽干账户额度，请立即归档历史！',
+                badge: '🔴 建议归档区',
+                desc: '🚫 历史已累积较多楼层，建议执行阶段记忆归档以恢复巅峰智力并大幅节省 API 额度！',
                 percent: 100
             };
         }
@@ -1340,7 +1452,7 @@
             <div class="xv-tb-hero-limits">
                 <span>🟢 舒适智力区: &lt;${(p.modelSpec.rpComfort/1000).toFixed(0)}k</span>
                 <span style="color:#fb923c;">🟠 疲劳警戒: ${(p.modelSpec.rpWarn/1000).toFixed(0)}k</span>
-                <span style="color:#f87171;">🔴 降智红线: ${(p.modelSpec.rpCrit/1000).toFixed(0)}k</span>
+                <span style="color:#f87171;">🔴 建议归档: ${(p.modelSpec.rpCrit/1000).toFixed(0)}k</span>
                 <span style="opacity:0.4;">物理极限: ${(p.modelSpec.maxContext >= 1000000 ? (p.modelSpec.maxContext/1000000).toFixed(0) + 'M' : (p.modelSpec.maxContext/1000).toFixed(0) + 'k')}</span>
             </div>
             <div style="font-size:11.5px; color:rgba(255,255,255,0.65); line-height:1.5; margin-top:10px;">
@@ -1368,15 +1480,15 @@
         grid1.innerHTML = `
             <div class="xv-tb-payload-card">
                 <div class="xv-tb-payload-card-title">
-                    <span>🎴 角色卡人设与示例</span>
+                    <span>🎴 角色卡人设与设定</span>
                     <span style="font-size:10px; color:#38bdf8;">定义</span>
                 </div>
                 <div class="xv-tb-payload-card-val">${p.charTotal.toLocaleString()} <span style="font-size:11px; font-weight:normal; opacity:0.6;">tk</span></div>
                 <div class="xv-tb-payload-card-sub">
                     <b>真实字符数：约 ${p.charChars.toLocaleString()} 字</b><br>
                     描述+性格+场景: ${(p.charBreakdown.description + p.charBreakdown.personality + p.charBreakdown.scenario).toLocaleString()} tk<br>
-                    <span style="color:${p.charBreakdown.mes_example > 0 ? '#fdba74' : 'rgba(255,255,255,0.4)'};">
-                        隐藏示例对话: ${p.charBreakdown.mes_example.toLocaleString()} tk
+                    <span style="color:${p.charBreakdown.system_prompt > 0 ? '#38bdf8' : 'rgba(255,255,255,0.4)'};">
+                        内置系统提示: ${p.charBreakdown.system_prompt.toLocaleString()} tk · 问候: ${p.charBreakdown.first_mes.toLocaleString()} tk
                     </span>
                 </div>
             </div>
@@ -1409,12 +1521,12 @@
             <div class="xv-tb-payload-card">
                 <div class="xv-tb-payload-card-title">
                     <span>⚙️ 预设与动态规则</span>
-                    <span style="font-size:10px; color:#a78bfa;">${p.preset.presetName} ${p.preset.isEstimate ? '(预估)' : ''}</span>
+                    <span style="font-size:10px; color:#a78bfa;">${p.preset.presetName}</span>
                 </div>
                 <div class="xv-tb-payload-card-val">${p.preset.total.toLocaleString()} <span style="font-size:11px; font-weight:normal; opacity:0.6;">tk</span></div>
                 <div class="xv-tb-payload-card-sub">
-                    破甲+系统规范: ${p.preset.system_prompt.toLocaleString()} tk<br>
-                    动态勾选块: ${p.preset.custom_blocks.toLocaleString()} tk · 后置: ${p.preset.post_history.toLocaleString()} tk
+                    系统提示与破甲: ${p.preset.system_prompt.toLocaleString()} tk<br>
+                    动态自定义块: ${p.preset.custom_blocks.toLocaleString()} tk · 后置: ${p.preset.post_history.toLocaleString()} tk
                 </div>
             </div>
 
@@ -1742,7 +1854,7 @@
                 </div>
                 <div class="inline-drawer-content" style="display: none; padding: 10px 14px;">
                     <div style="font-size:12px; margin-bottom:8px; opacity:0.85; line-height:1.5;">
-                        <b>XV 随身百宝箱 v2.2.0</b><br>
+                        <b>XV 随身百宝箱 v2.4.0</b><br>
                         全景真实 Token 监控 · 模型注意力红线 · 古法 2.0 阶段记忆归档
                     </div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
@@ -1771,7 +1883,7 @@
         drawerDiv.querySelector('#xv-tb-ext-btn-open')?.addEventListener('click', () => openModal('tokens'));
         drawerDiv.querySelector('#xv-tb-ext-btn-refresh')?.addEventListener('click', () => {
             updateTokenHUD();
-            showToast('✅ 已重新计算全量 Token 数据！');
+            showToast('✅ 已重新穿透计算全量原生 Token 数据！');
         });
     }
 
@@ -1800,7 +1912,7 @@
                         </svg>
                     </div>
                     <div class="xv-tb-title">XV 随身百宝箱</div>
-                    <div class="xv-tb-tagline">v2.2.0 · 全景 Token 监控</div>
+                    <div class="xv-tb-tagline">v2.4.0 · 原生全息校准</div>
                 </div>
                 <button class="xv-tb-close-btn" id="xv-tb-btn-close">✕</button>
             </div>
@@ -1917,7 +2029,7 @@
         }
     }
 
-    // 状态栏美化常驻样式双保险
+    // 状态栏美化常驻样式双保险 (高性能静音渲染，移除高功耗模糊滤镜)
     function ensureRemyStyles() {
         if (document.getElementById('xv-remy-permanent-styles')) return;
         const style = document.createElement('style');
@@ -1930,7 +2042,7 @@
             .zc-meta-info { font-family: 'Playfair Display', serif !important; font-size: 11px !important; color: rgba(255, 255, 255, 0.4) !important; letter-spacing: 2px !important; text-transform: uppercase !important; margin-bottom: 6px !important; }
             .zc-chapter-head { font-size: 18px !important; font-weight: 600 !important; color: #f0f0f0 !important; line-height: 1.4 !important; letter-spacing: 1px !important; margin-bottom: 6px !important; text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important; }
             .zc-chapter-sub { font-size: 12px !important; color: rgba(255, 255, 255, 0.6) !important; font-style: italic !important; line-height: 1.6 !important; }
-            details.xs-status-container { width: 100% !important; box-sizing: border-box !important; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important; font-size: 13px !important; line-height: 1.5 !important; margin: 4px 0 !important; background: rgba(0, 0, 0, 0.3) !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 8px !important; color: #eee !important; overflow: hidden !important; }
+            details.xs-status-container { width: 100% !important; box-sizing: border-box !important; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important; font-size: 13px !important; line-height: 1.5 !important; margin: 4px 0 !important; background: rgba(14, 18, 26, 0.95) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 8px !important; color: #eee !important; overflow: hidden !important; }
             details.xs-status-container + details.xs-status-container { margin-top: 4px !important; }
             details.xs-status-container > summary.xs-status-summary { padding: 8px 14px !important; cursor: pointer !important; font-weight: 600 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; background: transparent !important; user-select: none !important; -webkit-tap-highlight-color: transparent !important; list-style: none !important; color: #eee !important; outline: none !important; }
             details.xs-status-container > summary.xs-status-summary::-webkit-details-marker { display: none !important; }
@@ -1965,12 +2077,11 @@
     // 辅助函数：若当前正开着 Tokens 监控页，实时重刷 DOM 保持同步
     function syncOpenTokensTab() {
         const modal = document.getElementById('xv-tb-modal');
-        if (modal && modal.style.display !== 'none') {
-            const activeNav = modal.querySelector('.xv-tb-nav-btn.xv-tb-active');
-            if (activeNav && activeNav.dataset.tab === 'tokens') {
-                const content = document.getElementById('xv-tb-content');
-                if (content) renderTokensTab(content);
-            }
+        if (!modal || modal.style.display === 'none' || !modal.classList.contains('xv-tb-show')) return;
+        const activeNav = modal.querySelector('.xv-tb-nav-btn.xv-tb-active');
+        if (activeNav && activeNav.dataset.tab === 'tokens') {
+            const content = document.getElementById('xv-tb-content');
+            if (content) renderTokensTab(content);
         }
     }
 
@@ -2029,19 +2140,15 @@
             setupSTEventListeners();
         }
 
-        // 定时轮询保证输入栏重绘后 Token 胶囊始终挂载、侧边栏扩展列表注册、且多余图标被清理
+        // 极低功耗定时检查：仅在输入框重绘且 HUD 丢失时单次补偿注入
         // 【关键性能铁律】：绝不在此定时轮询中调用 updateTokenHUD() 或重绘 Token！仅检查 DOM 存在性！
         setInterval(() => {
-            ensureRemyStyles();
-            registerExtensionSettingsDrawer();
-            const hud = document.getElementById('xv-tb-token-hud');
             const sendBtn = document.getElementById('send_but');
-            const oldBtn = document.getElementById('xv-tb-toolbar-btn');
-            if (oldBtn) oldBtn.remove();
+            const hud = document.getElementById('xv-tb-token-hud');
             if (!hud && sendBtn && sendBtn.parentNode) {
                 injectToolbarButton();
             }
-        }, 3000);
+        }, 5000);
     }
 
     bootstrap();

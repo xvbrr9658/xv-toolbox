@@ -1,84 +1,29 @@
 {
-  "version": "2.2.0",
+  "version": "2.4.0",
   "updated_at": "2026-09-23",
   "note": "XV-Toolbox 官方模型规格与注意力红线数据库（支持自动匹配与在线热更新）",
   "models": {
-    "gemini-3.1-pro-low": {
-      "displayName": "Gemini 3.1 Pro (Low)",
-      "provider": "Google / Antigravity ACC",
-      "maxContext": 2000000,
-      "reasoningEffort": "low",
-      "thinkingWarn": false,
-      "rpComfort": 15000,
-      "rpWarn": 28000,
-      "rpCrit": 40000,
-      "desc": "Google 旗舰深度推理模型 · 低思考预算档位，回复神速，额度消耗克制。"
-    },
-    "gemini-3.1-pro-high": {
-      "displayName": "Gemini 3.1 Pro (High)",
-      "provider": "Google / Antigravity ACC",
-      "maxContext": 2000000,
-      "reasoningEffort": "high",
-      "thinkingWarn": true,
-      "rpComfort": 12000,
-      "rpWarn": 22000,
-      "rpCrit": 35000,
-      "desc": "Google 旗舰深度推理模型 · 极高思考预算档位 ⚠️ 包含大量隐式链式思考，额度消耗较快。"
-    },
-    "gemini-3.1-pro": {
-      "displayName": "Gemini 3.1 Pro",
-      "provider": "Google / Antigravity ACC",
-      "maxContext": 2000000,
-      "reasoningEffort": "standard",
-      "thinkingWarn": false,
-      "rpComfort": 15000,
-      "rpWarn": 28000,
-      "rpCrit": 40000,
-      "desc": "Google 旗舰深度推理模型 · 兼顾顶级文学逻辑与推理。"
-    },
-    "gemini-3.8-flash": {
-      "displayName": "Gemini 3.8 Flash",
-      "provider": "Google / Antigravity ACC",
+    "claude-sonnet-4-6": {
+      "displayName": "Claude Sonnet 4.6",
+      "provider": "Anthropic",
       "maxContext": 1000000,
       "reasoningEffort": "none",
       "thinkingWarn": false,
-      "rpComfort": 18000,
-      "rpWarn": 35000,
-      "rpCrit": 45000,
-      "desc": "Google 极速主力工作模型 · 百万上下文，超高性价比与低延迟响应。"
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Anthropic 4.6 旗舰文学模型 · 百万超大窗口，长程微表情与深层心理博弈顶级。"
     },
-    "gemini-2.5-pro": {
-      "displayName": "Gemini 2.5 Pro",
-      "provider": "Google / Antigravity ACC",
-      "maxContext": 2000000,
-      "reasoningEffort": "standard",
-      "thinkingWarn": false,
-      "rpComfort": 15000,
-      "rpWarn": 28000,
-      "rpCrit": 40000,
-      "desc": "Google 2.5 旗舰模型 · 200万超大窗口。"
-    },
-    "gemini-2.5-flash": {
-      "displayName": "Gemini 2.5 Flash",
-      "provider": "Google / Antigravity ACC",
+    "claude-sonnet-4": {
+      "displayName": "Claude Sonnet 4",
+      "provider": "Anthropic",
       "maxContext": 1000000,
       "reasoningEffort": "none",
       "thinkingWarn": false,
-      "rpComfort": 18000,
-      "rpWarn": 35000,
-      "rpCrit": 45000,
-      "desc": "Google 2.5 闪电模型 · 百万上下文，轻快敏捷。"
-    },
-    "gemini-2.0-flash": {
-      "displayName": "Gemini 2.0 Flash",
-      "provider": "Google",
-      "maxContext": 1000000,
-      "reasoningEffort": "none",
-      "thinkingWarn": false,
-      "rpComfort": 18000,
-      "rpWarn": 35000,
-      "rpCrit": 45000,
-      "desc": "Google 2.0 极速多模态模型 · 100万超大窗口。"
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Anthropic 4 代旗舰文学模型 · 百万超大窗口。"
     },
     "claude-3-7-sonnet": {
       "displayName": "Claude 3.7 Sonnet",
@@ -86,21 +31,21 @@
       "maxContext": 200000,
       "reasoningEffort": "standard",
       "thinkingWarn": false,
-      "rpComfort": 18000,
-      "rpWarn": 28000,
-      "rpCrit": 42000,
+      "rpComfort": 50000,
+      "rpWarn": 80000,
+      "rpCrit": 100000,
       "desc": "Anthropic 顶级双模推理旗舰 · 200k 上下文，微表情与深度心理博弈顶级。"
     },
     "claude-3-5-sonnet-20241022": {
-      "displayName": "Claude 3.5 Sonnet (New)",
+      "displayName": "Claude 3.5 Sonnet",
       "provider": "Anthropic",
       "maxContext": 200000,
       "reasoningEffort": "none",
       "thinkingWarn": false,
-      "rpComfort": 15000,
-      "rpWarn": 25000,
-      "rpCrit": 38000,
-      "desc": "Anthropic 顶级文本文风模型 · 200k 上下文，微表情与心理博弈顶级，需严格注意控流。"
+      "rpComfort": 50000,
+      "rpWarn": 80000,
+      "rpCrit": 100000,
+      "desc": "Anthropic 顶级文本文风模型 · 200k 上下文，微表情与心理博弈顶级。"
     },
     "claude-3-5-sonnet": {
       "displayName": "Claude 3.5 Sonnet",
@@ -108,9 +53,9 @@
       "maxContext": 200000,
       "reasoningEffort": "none",
       "thinkingWarn": false,
-      "rpComfort": 15000,
-      "rpWarn": 25000,
-      "rpCrit": 38000,
+      "rpComfort": 50000,
+      "rpWarn": 80000,
+      "rpCrit": 100000,
       "desc": "Anthropic 顶级文本文风模型 · 200k 上下文。"
     },
     "claude-3-5-haiku": {
@@ -119,9 +64,9 @@
       "maxContext": 200000,
       "reasoningEffort": "none",
       "thinkingWarn": false,
-      "rpComfort": 18000,
-      "rpWarn": 32000,
-      "rpCrit": 45000,
+      "rpComfort": 45000,
+      "rpWarn": 75000,
+      "rpCrit": 95000,
       "desc": "Anthropic 极速轻量模型 · 200k 上下文，响应极快。"
     },
     "claude-3-opus": {
@@ -130,10 +75,87 @@
       "maxContext": 200000,
       "reasoningEffort": "none",
       "thinkingWarn": false,
-      "rpComfort": 12000,
-      "rpWarn": 20000,
-      "rpCrit": 32000,
-      "desc": "Anthropic 重量级推理模型 · 建议常驻在安全区内使用。"
+      "rpComfort": 40000,
+      "rpWarn": 65000,
+      "rpCrit": 85000,
+      "desc": "Anthropic 重量级文学模型 · 建议常驻在安全区内使用。"
+    },
+    "gemini-3.1-pro-low": {
+      "displayName": "Gemini 3.1 Pro (Low)",
+      "provider": "Google / Antigravity ACC",
+      "maxContext": 2000000,
+      "reasoningEffort": "low",
+      "thinkingWarn": false,
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Google 旗舰深度推理模型 · 低思考预算档位，回复神速，额度消耗克制。"
+    },
+    "gemini-3.1-pro-high": {
+      "displayName": "Gemini 3.1 Pro (High)",
+      "provider": "Google / Antigravity ACC",
+      "maxContext": 2000000,
+      "reasoningEffort": "high",
+      "thinkingWarn": true,
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Google 旗舰深度推理模型 · 极高思考预算档位 ⚠️ 包含大量隐式链式思考。"
+    },
+    "gemini-3.1-pro": {
+      "displayName": "Gemini 3.1 Pro",
+      "provider": "Google / Antigravity ACC",
+      "maxContext": 2000000,
+      "reasoningEffort": "standard",
+      "thinkingWarn": false,
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Google 旗舰深度推理模型 · 兼顾顶级文学逻辑与两百万超大窗口。"
+    },
+    "gemini-3.8-flash": {
+      "displayName": "Gemini 3.8 Flash",
+      "provider": "Google / Antigravity ACC",
+      "maxContext": 1000000,
+      "reasoningEffort": "none",
+      "thinkingWarn": false,
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Google 极速主力工作模型 · 百万上下文，超高性价比与低延迟响应。"
+    },
+    "gemini-2.5-pro": {
+      "displayName": "Gemini 2.5 Pro",
+      "provider": "Google / Antigravity ACC",
+      "maxContext": 2000000,
+      "reasoningEffort": "standard",
+      "thinkingWarn": false,
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Google 2.5 旗舰模型 · 200万超大窗口。"
+    },
+    "gemini-2.5-flash": {
+      "displayName": "Gemini 2.5 Flash",
+      "provider": "Google / Antigravity ACC",
+      "maxContext": 1000000,
+      "reasoningEffort": "none",
+      "thinkingWarn": false,
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Google 2.5 闪电模型 · 百万上下文，轻快敏捷。"
+    },
+    "gemini-2.0-flash": {
+      "displayName": "Gemini 2.0 Flash",
+      "provider": "Google",
+      "maxContext": 1000000,
+      "reasoningEffort": "none",
+      "thinkingWarn": false,
+      "rpComfort": 60000,
+      "rpWarn": 90000,
+      "rpCrit": 120000,
+      "desc": "Google 2.0 极速多模态模型 · 100万超大窗口。"
     },
     "gpt-4o": {
       "displayName": "GPT-4o",
@@ -141,9 +163,9 @@
       "maxContext": 128000,
       "reasoningEffort": "none",
       "thinkingWarn": false,
-      "rpComfort": 14000,
-      "rpWarn": 25000,
-      "rpCrit": 35000,
+      "rpComfort": 40000,
+      "rpWarn": 60000,
+      "rpCrit": 80000,
       "desc": "OpenAI 多模态旗舰模型 · 128k 上下文。"
     },
     "deepseek-reasoner": {
@@ -152,9 +174,9 @@
       "maxContext": 64000,
       "reasoningEffort": "high",
       "thinkingWarn": true,
-      "rpComfort": 14000,
-      "rpWarn": 25000,
-      "rpCrit": 35000,
+      "rpComfort": 35000,
+      "rpWarn": 48000,
+      "rpCrit": 60000,
       "desc": "DeepSeek 深度强化推理模型 · 具备强链式思考能力。"
     },
     "deepseek-chat": {
@@ -163,9 +185,9 @@
       "maxContext": 64000,
       "reasoningEffort": "none",
       "thinkingWarn": false,
-      "rpComfort": 16000,
-      "rpWarn": 30000,
-      "rpCrit": 42000,
+      "rpComfort": 40000,
+      "rpWarn": 52000,
+      "rpCrit": 62000,
       "desc": "DeepSeek 综合大模型 · 64k 上下文，文笔通顺流畅。"
     },
     "default": {
@@ -174,9 +196,9 @@
       "maxContext": 128000,
       "reasoningEffort": "unknown",
       "thinkingWarn": false,
-      "rpComfort": 15000,
-      "rpWarn": 25000,
-      "rpCrit": 40000,
+      "rpComfort": 40000,
+      "rpWarn": 60000,
+      "rpCrit": 80000,
       "desc": "通用标准模型配置基线。"
     }
   }
