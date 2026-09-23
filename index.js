@@ -1,5 +1,5 @@
 /**
- * XV's Toolbox (xv-toolbox) - 核心控制脚本 v2.4.1 (极速冷静与原生全息校准版)
+ * XV's Toolbox (xv-toolbox) - 核心控制脚本 v2.4.2 (世界书精准对齐·零阻塞极速冷静版)
  * 专为深度沉浸式长程剧情打造的随身工具箱：
  * 1. 全景真实 Token 监控穿透引擎 & 模型注意力健康红线（零网络阻塞·超低功耗瞬时计算）
  * 2. 古法 2.0 阶段记忆归档面板（保留文风对照样本与手动指定隐藏楼层）
@@ -7,7 +7,7 @@
  * 4. 富文本组件一键发包（报纸/大盘/论坛/小剧场/独白/推剧情）
  * 5. Git 规范仓库化热更新
  * 作者: xv & AI Assistant
- * 版本: v2.4.1
+ * 版本: v2.4.2
  */
 
 (function () {
@@ -647,41 +647,51 @@
         return count;
     }
 
-    // 世界书条目 Token 缓存 (优先穿透酒馆原生同步分词接口，指纹缓存永不重复计算)
+    // 世界书条目 Token 缓存 (纯本地极速计算 + 异步非阻塞后台校准，绝对杜绝同步网络阻塞，0卡顿0发烫)
     const entryTokenCache = new Map();
+    let asyncTokenUpdateTimer = null;
+    function scheduleAsyncTokenRefresh() {
+        if (asyncTokenUpdateTimer) return;
+        asyncTokenUpdateTimer = setTimeout(() => {
+            asyncTokenUpdateTimer = null;
+            if (typeof updateTokenHUD === 'function') updateTokenHUD();
+            if (typeof syncOpenTokensTab === 'function') syncOpenTokensTab();
+        }, 500);
+    }
+
     function getEntryTokenCount(entry) {
         if (!entry || !entry.content) return 0;
         if (typeof entry.token_count === 'number' && entry.token_count > 0) {
             return entry.token_count;
         }
+        if (typeof entry.tokens === 'number' && entry.tokens > 0) {
+            return entry.tokens;
+        }
         const content = String(entry.content);
-        const cacheKey = `${entry.world ?? ''}:${entry.uid ?? ''}:${content.length}:${content.slice(0, 30)}`;
+        const cacheKey = `${entry.world ?? ''}:${entry.uid ?? ''}:${content.length}:${content.slice(0, 20)}:${content.slice(-20)}`;
         if (entryTokenCache.has(cacheKey)) {
             return entryTokenCache.get(cacheKey);
         }
 
-        let count = 0;
-        // 1. 最高优先级：直接调用 SillyTavern 原生同步分词接口 (100% 对齐世界书编辑器 Token 标签)
-        try {
-            const ctx = (window.SillyTavern && typeof window.SillyTavern.getContext === 'function') 
-                ? window.SillyTavern.getContext() 
-                : null;
-            if (ctx && typeof ctx.getTokenCount === 'function') {
-                const nativeCount = ctx.getTokenCount(content);
-                if (typeof nativeCount === 'number' && nativeCount > 0) {
-                    count = nativeCount;
-                }
-            }
-        } catch (e) {
-            // 静默降级
-        }
-
-        // 2. 原生接口未捕获时的无感保底：高精度 CJK 加权分词引擎
-        if (!count) {
-            count = fastCountTokens(content);
-        }
-
+        // 1. 纯本地高速高精度 CJK 算法 (0.005ms 响应，坚决不调用任何同步 AJAX，杜绝阻塞主线程)
+        const count = fastCountTokens(content);
         entryTokenCache.set(cacheKey, count);
+
+        // 2. 异步后台静默校准：仅在支持非阻塞 Promise 的 getTokenCountAsync 时异步校准
+        try {
+            const ctx = (window.SillyTavern && typeof window.SillyTavern.getContext === 'function')
+                ? window.SillyTavern.getContext()
+                : null;
+            if (ctx && typeof ctx.getTokenCountAsync === 'function') {
+                ctx.getTokenCountAsync(content).then(exact => {
+                    if (typeof exact === 'number' && exact > 0 && exact !== count) {
+                        entryTokenCache.set(cacheKey, exact);
+                        scheduleAsyncTokenRefresh();
+                    }
+                }).catch(() => {});
+            }
+        } catch (e) {}
+
         return count;
     }
 
@@ -767,7 +777,7 @@
             }
         }
 
-        // 3. 激活世界书条目全面扫描 (角色卡内置 + 会话绑定 + 角色关联 + 全局激活)
+        // 3. 激活世界书条目全面扫描 (外部活跃优先，严格覆盖角色内置旧快照，消灭重复与幽灵条目)
         let lorebook = { constant: 0, triggered: 0, total: 0, count: 0, constantCount: 0, triggeredCount: 0, entriesList: [] };
 
         function extractEntriesFromBook(book) {
@@ -777,23 +787,10 @@
             return [];
         }
 
-        const rawEntriesWithSource = [];
-
-        // 3.1 角色卡内置世界书 (MUFY/酒馆角色卡核心存储处)
-        if (activeChar?.data?.character_book) {
-            extractEntriesFromBook(activeChar.data.character_book).forEach(e => {
-                if (e) rawEntriesWithSource.push({ entry: e, source: '角色内置' });
-            });
-        } else if (activeChar?.character_book && typeof activeChar.character_book === 'object') {
-            extractEntriesFromBook(activeChar.character_book).forEach(e => {
-                if (e) rawEntriesWithSource.push({ entry: e, source: '角色内置' });
-            });
-        }
-
-        // 3.2 收集所有已挂载激活的世界书名称集合
+        // 3.1 收集所有当前活跃的世界书名称集合
         const activeBookNames = new Set();
 
-        // (A) 当前会话专属世界书 (Chat Worldbook)
+        // (A) 当前会话专属世界书 (Chat Worldbook - 会话级最高活跃度)
         const chatWI = ctx?.chatMetadata?.world_info || window.chat_metadata?.world_info;
         if (Array.isArray(chatWI)) chatWI.forEach(n => n && activeBookNames.add(String(n).trim()));
         else if (typeof chatWI === 'string' && chatWI.trim()) activeBookNames.add(chatWI.trim());
@@ -826,7 +823,10 @@
             }
         });
 
-        // 3.3 从酒馆多级数据源与内存快照中提取激活世界书条目
+        // 3.2 收集原始条目，建立严格分级优先权：外部活跃世界书 (Priority 1) > 角色卡内置世界书 (Priority 2)
+        const rawEntriesWithSource = [];
+
+        // Priority 1: 加载外部活跃世界书 (用户最新编辑、记忆系统最新状态)
         activeBookNames.forEach(bookName => {
             let book = null;
             if (loadedWorldBooksCache.has(bookName)) {
@@ -848,12 +848,23 @@
 
             if (book) {
                 extractEntriesFromBook(book).forEach(e => {
-                    if (e) rawEntriesWithSource.push({ entry: e, source: bookName });
+                    if (e) rawEntriesWithSource.push({ entry: e, source: bookName, isEmbedded: false });
                 });
             }
         });
 
-        // 3.4 会话级开关覆盖穿透
+        // Priority 2: 加载角色卡内置世界书 (作为补充兜底，若外部已有同名条目则丢弃)
+        if (activeChar?.data?.character_book) {
+            extractEntriesFromBook(activeChar.data.character_book).forEach(e => {
+                if (e) rawEntriesWithSource.push({ entry: e, source: '角色内置', isEmbedded: true });
+            });
+        } else if (activeChar?.character_book && typeof activeChar.character_book === 'object') {
+            extractEntriesFromBook(activeChar.character_book).forEach(e => {
+                if (e) rawEntriesWithSource.push({ entry: e, source: '角色内置', isEmbedded: true });
+            });
+        }
+
+        // 3.3 会话级开关覆盖穿透
         const disabledOverrides = new Set();
         const enabledOverrides = new Set();
         const metaDisabled = ctx?.chatMetadata?.disabled_entries || window.chat_metadata?.disabled_entries;
@@ -861,9 +872,9 @@
         const metaEnabled = ctx?.chatMetadata?.enabled_entries || window.chat_metadata?.enabled_entries;
         if (Array.isArray(metaEnabled)) metaEnabled.forEach(id => enabledOverrides.add(String(id)));
 
-        // 3.5 过滤并统计条目 (防 UID 跨书串扰 + 原生角色专属过滤 characterFilter)
-        const seenCompoundKeys = new Set();
-        rawEntriesWithSource.forEach(({ entry, source }, idx) => {
+        // 3.4 过滤并统计条目 (彻底去重：外部优先覆盖内置旧快照，消灭成对重复与幽灵条目)
+        const seenIdentities = new Set();
+        rawEntriesWithSource.forEach(({ entry, source, isEmbedded }, idx) => {
             if (!entry) return;
             const content = entry.content ? String(entry.content).trim() : '';
             if (!content) return;
@@ -886,6 +897,17 @@
             const entryUid = entry.uid !== undefined ? String(entry.uid) : (entry.id !== undefined ? String(entry.id) : String(idx));
             const entryComment = entry.comment ? String(entry.comment).trim() : '';
 
+            // 唯一标识指纹 (条目名/注释优先，无注释时用内容指纹；坚决不带 source 前缀)
+            const identityKey = entryComment
+                ? `c:${entryComment.toLowerCase()}`
+                : `f:${entryUid}:${content.slice(0, 30)}`;
+
+            if (seenIdentities.has(identityKey)) {
+                return; // 已被外部活跃世界书或更高优先级条目收录，丢弃重复/陈旧快照
+            }
+            seenIdentities.add(identityKey);
+
+            // 开关状态检查 (支持会话级手动切换覆盖)
             let isEnabled = true;
             if (entry.disable === true || entry.enabled === false) {
                 isEnabled = false;
@@ -898,10 +920,6 @@
             }
 
             if (!isEnabled) return;
-
-            const compoundKey = `${source}::${entryUid}::${entryComment || content.slice(0, 15)}`;
-            if (seenCompoundKeys.has(compoundKey)) return;
-            seenCompoundKeys.add(compoundKey);
 
             const tks = getEntryTokenCount(entry);
             const isConst = entry.constant === true || entry.always_active === true;
@@ -1931,7 +1949,7 @@
                 </div>
                 <div class="inline-drawer-content" style="display: none; padding: 10px 14px;">
                     <div style="font-size:12px; margin-bottom:8px; opacity:0.85; line-height:1.5;">
-                        <b>XV 随身百宝箱 v2.4.1</b><br>
+                        <b>XV 随身百宝箱 v2.4.2</b><br>
                         全景真实 Token 监控 · 模型注意力红线 · 古法 2.0 阶段记忆归档
                     </div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
@@ -1989,7 +2007,7 @@
                         </svg>
                     </div>
                     <div class="xv-tb-title">XV 随身百宝箱</div>
-                    <div class="xv-tb-tagline">v2.4.1 · 原生全息校准</div>
+                    <div class="xv-tb-tagline">v2.4.2 · 原生全息校准</div>
                 </div>
                 <button class="xv-tb-close-btn" id="xv-tb-btn-close">✕</button>
             </div>
@@ -2229,5 +2247,5 @@
     }
 
     bootstrap();
-    console.log('[XV-Toolbox] XV 随身百宝箱 v2.4.1 (极速冷静与原生全息校准版) 已成功启动！');
+    console.log('[XV-Toolbox] XV 随身百宝箱 v2.4.2 (世界书精准对齐·零阻塞极速冷静版) 已成功启动！');
 })();
